@@ -14,9 +14,9 @@ BUILD_DIR = $(WORK_DIR)/build
 CFLAGS += --x-assign unique --x-initial unique
 CFLAGS += --cc --exe -j 0
 
-VER_OPTS  += --Mdir $(BUILD_DIR) --top-module $(TOP)
-VER_SRCS  += $(V_SRCS)
-VER_SRCS  += $(addprefix -I,$(V_INCS))
+VERILATOR_OPTS  += --Mdir $(BUILD_DIR) --top-module $(TOP)
+VERILATOR_SRCS  += $(V_SRCS)
+VERILATOR_SRCS  += $(addprefix -I,$(V_INCS))
 
 all: run
 
@@ -28,11 +28,11 @@ run: rtl
 rtl: $(BUILD_DIR)/.PASS
 
 $(BUILD_DIR)/.PASS: $(V_SRCS) $(V_INCS)
-	verilator $(CFLAGS) $(VER_OPTS) $(VER_SRCS) && touch $(BUILD_DIR)/.PASS
+	verilator $(CFLAGS) $(VERILATOR_OPTS) $(VERILATOR_SRCS) && touch $(BUILD_DIR)/.PASS
 
 # Lint the RTL
 lint: $(V_SRCS)
-	verilator --lint-only $(VER_OPTS) $(VER_SRCS)
+	verilator --lint-only $(VERILATOR_OPTS) $(VERILATOR_SRCS)
 
 # Clean
 .PHONY: clean

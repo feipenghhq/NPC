@@ -12,7 +12,8 @@
 
 module core_s #(
     parameter XLEN       = 32,
-    parameter PC_RST_VEC = 32'h00000000     // PC reset vector
+    parameter PC_RST_VEC = 32'h00000000,    // PC reset vector
+    parameter REGID_W    = 5                // Register ID width
 ) (
 
     input  logic                clk,
@@ -29,7 +30,7 @@ module core_s #(
     localparam ALUOP_W = 3;
     localparam BXXOP_W = 3;
     localparam MEMOP_W = 3;
-    localparam REGID_W = 5;
+    localparam R0_ZERO = 1;
 
     // -------------------------------------------
     // Signal definition
@@ -53,6 +54,9 @@ module core_s #(
     logic [REGID_W-1:0] dec_rs1_addr;
     logic [REGID_W-1:0] dec_rs2_addr;
     logic [XLEN-1:0]    dec_imm;
+    // From RegFile
+    logic [XLEN-1:0]    rs1_rdata;
+    logic [XLEN-1:0]    rs2_rdata;
 
     // -------------------------------------------
     // Module Instantiation
@@ -60,25 +64,36 @@ module core_s #(
 
     // IFU
     IFU #(
-          .XLEN(XLEN),
-          .PC_RST_VEC(PC_RST_VEC)
-         )
+        .XLEN(XLEN),
+        .PC_RST_VEC(PC_RST_VEC))
     u_IFU (
-           .clk(clk),
-           .rst_b(rst_b),
-           .pc(pc)
-          );
+        .clk(clk),
+        .rst_b(rst_b),
+        .pc(pc));
 
     // IDU
     IDU #(
-          .XLEN(XLEN),
-          .ALUOP_W(ALUOP_W),
-          .BXXOP_W(BXXOP_W),
-          .MEMOP_W(MEMOP_W),
-          .REGID_W(REGID_W)
-         )
-    u_IDU (
-            .*
-          );
+        .XLEN(XLEN),
+        .ALUOP_W(ALUOP_W),
+        .BXXOP_W(BXXOP_W),
+        .MEMOP_W(MEMOP_W),
+        .REGID_W(REGID_W))
+    u_IDU (.*);
+
+    // RegFile
+    RegFile #(
+        .XLEN(XLEN),
+        .REGID_W(REGID_W),
+        .R0_ZERO(R0_ZERO))
+    u_RegFile (
+        .clk(clk),
+        .rs1_addr(dec_rs1_addr),
+        .rs1_rdata(rs1_rdata),
+        .rs2_addr(dec_rs2_addr),
+        .rs2_rdata(rs2_rdata),
+        .rd_addr(dec_rd_addr),
+        .rd_wdata('0), // FIXME
+        .rd_write(dec_rd_write));
+
 
 endmodule
