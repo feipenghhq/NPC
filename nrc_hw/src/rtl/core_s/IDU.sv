@@ -14,7 +14,7 @@
 
 module IDU #(
     parameter XLEN    = 32,
-    parameter ALUOP_W = 3,
+    parameter ALUOP_W = 4,
     parameter BXXOP_W = 3,
     parameter MEMOP_W = 3,
     parameter REGID_W = 5
@@ -171,16 +171,19 @@ module IDU #(
     // Zero      : LUI
     assign dec_alu_src1_sel_pc = is_jal | is_jalr | is_auipc | is_bxx;
     assign dec_alu_src1_sel_0  = is_lui;
+    assign dec_alu_src1_sel_rs1 = ~(dec_alu_src1_sel_pc | dec_alu_src1_sel_0);
 
     // ALU source 2 selection
     // RS2 value: Default
     // Immediate: JAL/JALR/BRANCH/LUI/AUIPC/ITYPE/LOAD/STORE
     assign dec_alu_src2_sel_imm = is_jal | is_jalr | is_bxx | is_lui | is_auipc | is_itype | is_load | is_store;
+    assign dec_alu_src2_sel_rs2 = ~dec_alu_src2_sel_imm;
 
     // ALU/BRANCH/MEM Opcode is the same as Funct3
-    assign dec_alu_opcode = rv32i_funct3;
     assign dec_bxx_opcode = rv32i_funct3;
     assign dec_mem_opcode = rv32i_funct3;
+    assign dec_alu_opcode[2:0] = rv32i_funct3;
+    assign dec_alu_opcode[3]   = inst[30]; // distinguish between ADD/SUB, SRL/SRA
 
     // Memory read/write
     assign dec_mem_read  = is_load;
@@ -192,5 +195,27 @@ module IDU #(
 
     // ebreak
     assign dec_ebreak = is_ebreak;
+
+    // -------------------------------------------
+    // Immediate generation
+    // -------------------------------------------
+
+    assign i_type_imm = is_jalr | is_itype | is_load;
+    assign u_type_imm = is_lui | is_auipc;
+    assign j_type_imm = is_jal;
+    assign s_type_imm = is_store;
+    assign b_type_imm = is_bxx;
+
+    assign u_type_imm_val = {inst[31:12], 12'b0};
+    assign i_type_imm_val = {{20{inst[31]}}, inst[31:20]};
+    assign j_type_imm_val = {{12{inst[31]}}, inst[19:12], inst[20], inst[30:21], 1'b0};
+    assign s_type_imm_val = {{20{inst[31]}}, inst[31:25], inst[11:7]};
+    assign b_type_imm_val = {{20{inst[31]}}, inst[7], inst[30:25], inst[11:8], 1'b0};
+
+    assign dec_imm = ({XLEN{i_type_imm}}   & i_type_imm_val) |
+                     ({XLEN{u_type_imm}}   & u_type_imm_val) |
+                     ({XLEN{j_type_imm}}   & j_type_imm_val) |
+                     ({XLEN{s_type_imm}}   & s_type_imm_val) |
+                     ({XLEN{b_type_imm}}   & b_type_imm_val);
 
 endmodule

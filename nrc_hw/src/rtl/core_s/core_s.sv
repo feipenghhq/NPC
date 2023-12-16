@@ -27,7 +27,7 @@ module core_s #(
     // localparam definition
     // -------------------------------------------
 
-    localparam ALUOP_W = 3;
+    localparam ALUOP_W = 4;
     localparam BXXOP_W = 3;
     localparam MEMOP_W = 3;
     localparam R0_ZERO = 1;
@@ -57,6 +57,8 @@ module core_s #(
     // From RegFile
     logic [XLEN-1:0]    rs1_rdata;
     logic [XLEN-1:0]    rs2_rdata;
+    // From EXU
+    logic [XLEN-1:0]    alu_result;
 
     // -------------------------------------------
     // Module Instantiation
@@ -92,8 +94,25 @@ module core_s #(
         .rs2_addr(dec_rs2_addr),
         .rs2_rdata(rs2_rdata),
         .rd_addr(dec_rd_addr),
-        .rd_wdata('0), // FIXME
+        .rd_wdata(alu_result),
         .rd_write(dec_rd_write));
 
+    // EXU
+    EXU #(
+        .XLEN(XLEN),
+        .ALUOP_W(ALUOP_W))
+    u_EXU (
+        .alu_opcode(dec_alu_opcode),
+        .alu_src1_sel_rs1(dec_alu_src1_sel_rs1),
+        .alu_src1_sel_pc(dec_alu_src1_sel_pc),
+        .alu_src1_sel_0(dec_alu_src1_sel_0),
+        .alu_src2_sel_rs2(dec_alu_src2_sel_rs2),
+        .alu_src2_sel_imm(dec_alu_src2_sel_imm),
+        .pc(pc),
+        .rs1_rdata(rs1_rdata),
+        .rs2_rdata(rs2_rdata),
+        .imm(dec_imm),
+        .alu_result(alu_result));
 
 endmodule
+
