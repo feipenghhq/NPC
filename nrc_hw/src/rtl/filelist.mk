@@ -12,7 +12,7 @@ RTL_PATH = src/rtl
 # verilog source file
 V_SRCS-CORE_S += $(wildcard $(RTL_PATH)/core_s/*.sv $(RTL_PATH)/core_s/*.v)
 
-# verilog include dirctoru
+# verilog include directory
 V_INCS += $(RTL_PATH)/include
 
 ifeq ($(CPU),CORE_S)

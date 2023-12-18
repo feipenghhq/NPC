@@ -3,19 +3,15 @@
 #
 # Project: NRC
 # Author: Heqing Huang
-# Date Created: 12/14/2023
+# Date Created: 12/16/2023
 # ------------------------------------------------------------------------------------------------
 
-# Select Target CPU
-CPU ?= CORE_S
+# path
+VER_PATH = src/sim/verilator
 
-ifeq ($(CPU),CORE_S)
-TOP = core_s
-endif
+# Verilator cpp source file
+CPP_SRCS += $(shell find $(VER_PATH)/env -name "*.cpp")
 
-# Include RTL filelist
-include src/rtl/filelist.mk
-
-# Include verilator
-include scripts/verilator.mk
+# Verilator include directory
+CPP_INCS += $(VER_PATH)/env
 

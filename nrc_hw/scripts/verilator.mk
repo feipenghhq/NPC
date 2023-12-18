@@ -11,28 +11,42 @@ WORK_DIR  = $(shell pwd)
 BUILD_DIR = $(WORK_DIR)/build
 
 # verilator build flags and options
-CFLAGS += --x-assign unique --x-initial unique
-CFLAGS += --cc --exe -j 0
+VERILATOR_FLAGS += --x-assign unique --x-initial unique
+VERILATOR_FLAGS += --cc --exe -j 0
+VERILATOR_FLAGS += --Mdir $(BUILD_DIR) --top-module $(TOP)
 
-VERILATOR_OPTS  += --Mdir $(BUILD_DIR) --top-module $(TOP)
-VERILATOR_SRCS  += $(V_SRCS)
-VERILATOR_SRCS  += $(addprefix -I,$(V_INCS))
+# Target
+TARGET = ics-test
+
+# Include CPP filelist
+include src/sim/verilator/filelist.mk
+
+# Include target specific filelist
+include src/sim/verilator/scripts/$(TARGET).mk
+
+# RTL source file
+RTL_SRCS  += $(V_SRCS)
+RTL_SRCS  += $(addprefix -I,$(V_INCS))
+
+# TB source file
+TB_SRCS   += $(CPP_SRCS)
+CFLAGS    += $(addprefix -I, $(abspath $(CPP_INCS)))
 
 all: run
 
 # Run simulation
-run: rtl
+run: compile
 	make V$(TOP) -C build -f V$(TOP).mk
 
-# Compile the RTL
-rtl: $(BUILD_DIR)/.PASS
+# Compile the RTL and TB
+compile: $(BUILD_DIR)/.PASS
 
-$(BUILD_DIR)/.PASS: $(V_SRCS) $(V_INCS)
-	verilator $(CFLAGS) $(VERILATOR_OPTS) $(VERILATOR_SRCS) && touch $(BUILD_DIR)/.PASS
+$(BUILD_DIR)/.PASS: $(V_SRCS) $(V_INCS) $(CPP_SRC)
+	verilator $(VERILATOR_FLAGS) -CFLAGS $(CFLAGS) $(RTL_SRCS) $(TB_SRCS) && touch $(BUILD_DIR)/.PASS
 
 # Lint the RTL
 lint: $(V_SRCS)
-	verilator --lint-only $(VERILATOR_OPTS) $(VERILATOR_SRCS)
+	verilator --lint-only $(RTL_OPTS) $(VERILATOR_SRCS)
 
 # Clean
 .PHONY: clean
