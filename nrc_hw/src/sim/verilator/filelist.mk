@@ -7,11 +7,17 @@
 # ------------------------------------------------------------------------------------------------
 
 # path
-VER_PATH = src/sim/verilator
+VERILATOR_PATH = src/sim/verilator
+
+# Folder
+FOLDERS = testbench
 
 # Verilator cpp source file
-CPP_SRCS += $(shell find $(VER_PATH)/env -name "*.cpp")
+CPP_SRCS += $(foreach folder,$(FOLDER), $(shell find $(VERILATOR_PATH)/$(foder) -name "*.cpp"))
+
+# main function file
+CPP_SRCS += $(VERILATOR_PATH)/tests/$(TOP)_main.cpp
 
 # Verilator include directory
-CPP_INCS += $(VER_PATH)/env
+CPP_INCS += $(addprefix $(VERILATOR_PATH)/,$(FOLDERS))
 

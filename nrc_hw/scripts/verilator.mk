@@ -15,14 +15,8 @@ VERILATOR_FLAGS += --x-assign unique --x-initial unique
 VERILATOR_FLAGS += --cc --exe -j 0
 VERILATOR_FLAGS += --Mdir $(BUILD_DIR) --top-module $(TOP)
 
-# Target
-TARGET = ics-test
-
 # Include CPP filelist
 include src/sim/verilator/filelist.mk
-
-# Include target specific filelist
-include src/sim/verilator/scripts/$(TARGET).mk
 
 # RTL source file
 RTL_SRCS  += $(V_SRCS)

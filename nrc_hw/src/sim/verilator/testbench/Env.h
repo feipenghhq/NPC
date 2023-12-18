@@ -112,7 +112,11 @@ void Env<M>::tick() {
  */
 template <class M>
 void Env<M>::dump() {
+    // FIXME: trace does not exist if --trace is not added in verilator
+    // Need to figure out how to only run this when --trace is enabled
+    /*
     if (!m_trace) m_trace->dump(sim_time);
+    */
 }
 
 #endif
