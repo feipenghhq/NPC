@@ -10,14 +10,15 @@
 _PATH = $(shell realpath src/sim/verilator)
 
 # Folder
-FOLDERS = testbench
+_DIR = testbench memory include
 
-# Verilator cpp source file
-CPP_SRCS += $(foreach folder,$(FOLDER), $(shell find $(_PATH)/$(foder) -name "*.cpp"))
+# Verilator cpp/c source file
+CPP_SRCS += $(foreach folder,$(_DIR), $(shell find $(_PATH)/$(folder) -name "*.cpp"))
+CPP_SRCS += $(foreach folder,$(_DIR), $(shell find $(_PATH)/$(folder) -name "*.c"))
 
 # main function file
 CPP_SRCS += $(_PATH)/tests/$(TOP)_main.cpp
 
 # Verilator include directory
-CPP_INCS += $(addprefix $(_PATH)/,$(FOLDERS))
+CPP_INCS += $(foreach folder,$(_DIR), $(addprefix $(_PATH)/,$(folder)))
 
