@@ -8,15 +8,14 @@
 // Main function for the core_s
 // ------------------------------------------------------------------------------------------------
 
-#include <Vcore_s.h>
-#include "Tb.h"
-#include "Ics.h"
+#include "utils.h"
+
+extern argu_s argu;
+int run_test(int, char *[], const argu_s *);
 
 int main(int argc, char *argv[]) {
-
-    Tb<Vcore_s> *tb;
-    tb = new Ics<Vcore_s>(argc, argv, NULL);
-    tb->init();
-    tb->run(-1);
+    parse_args(argc, argv);
+    run_test(argc, argv, &argu);
     return 0;
 }
+

@@ -6,57 +6,80 @@
 # Date Created: 12/14/2023
 # ------------------------------------------------------------------------------------------------
 
-# Directory
+# 1. Set build flags, RTL source files and C/CPP source files
+
+## Directory
 VERILATOR_DIR = $(BUILD_DIR)/verilator
 
-# verilator build flags and options
+## verilator build flags and options
 VERILATOR_FLAGS += --x-assign unique --x-initial unique
 VERILATOR_FLAGS += --cc --exe -j 0
 VERILATOR_FLAGS += --Mdir $(VERILATOR_DIR) --top-module $(TOP)
+VERILATOR_FLAGS += --trace
 
-# CFLAGS for g++ build
+## CFLAGS for g++ build
 CFLAGS += -CFLAGS -mcmodel=large
 
-# Include CPP filelist
+## Include CPP filelist
 include src/sim/verilator/filelist.mk
 
-# RTL source file
+## RTL source file
 RTL_SRCS  += $(V_SRCS)
 RTL_SRCS  += $(addprefix -I,$(V_INCS))
 
-# TB source file
+## TB source file
 TB_SRCS   += $(CPP_SRCS)
 TB_SRCS   += $(addprefix -CFLAGS -I, $(abspath $(CPP_INCS)))
 
-# Object
+## Verilator trace
+WAVE	 ?= 0
+ARG_WAVE ?=
+ifeq ($(WAVE),1)
+ARG_WAVE = --wave
+endif
+
+## Object
 OBJECT = V$(TOP)
+VPASS = $(VERILATOR_DIR)/.VPASS
+BPASS = $(VERILATOR_DIR)/.BPASS
 
-all: run
+# 2. Set test suites
+TEST_SUITES ?= ics-am-cpu-test
 
-# Run simulation
-run: $(OBJECT)
+## Include the test suites specific makefile
+include src/sim/verilator/scripts/$(TEST_SUITES).mk
+
+# 3. Commands
+
+## Define function to run simulation
+### Usage: $(call run_sim,image,suite,test,dut)
+define run_sim
 	$(info --> Running Test)
-	@$(VERILATOR_DIR)/$(OBJECT)
+	@cd $(VERILATOR_DIR) && ./$(OBJECT) --image $(1) --suite $(2) --test $(3) --dut $(4) $(ARG_WAVE)
+endef
 
-# Build the Verilator executable
+## Build the Verilator executable
 build: $(OBJECT)
 
-$(OBJECT): $(BUILD_DIR)/.COMPILE_PASS
+$(OBJECT): $(BPASS)
+
+$(BPASS): $(VPASS)
 	$(info --> Building Verilator Executable)
-	@$(MAKE) V$(TOP) -C $(VERILATOR_DIR) -f V$(TOP).mk -s
+	@$(MAKE) V$(TOP) -C $(VERILATOR_DIR) -f V$(TOP).mk -s && touch $@
 
-# Compile the RTL and TB
-compile: $(BUILD_DIR)/.COMPILE_PASS
+## Compile the RTL and TB
+compile: $(VPASS)
 
-$(BUILD_DIR)/.COMPILE_PASS: $(V_SRCS) $(V_INCS) $(CPP_SRC)
+$(VPASS): $(V_SRCS) $(V_INCS) $(CPP_SRCS)
 	$(info --> Verilatring)
 	@mkdir -p $(BUILD_DIR)
-	@verilator $(VERILATOR_FLAGS) $(CFLAGS) $(RTL_SRCS) $(TB_SRCS) && touch $(VERILATOR_DIR)/.COMPILE_PASS
+	@verilator $(VERILATOR_FLAGS) $(CFLAGS) $(RTL_SRCS) $(TB_SRCS) && touch $@
 
-# Lint the RTL
+## Lint the RTL
 lint: $(V_SRCS)
 	$(info --> Linting RTL)
 	@verilator --lint-only $(RTL_OPTS) $(RTL_SRCS)
 
+## clean
 clean_verilator:
 	rm -rf $(VERILATOR_DIR)

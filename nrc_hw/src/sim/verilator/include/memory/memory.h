@@ -13,6 +13,6 @@
 #ifndef __MEMORY_H__
 #define __MEMORY_H__
 
-void load_image(const char *img);
+size_t load_image(const char *img);
 
 #endif
