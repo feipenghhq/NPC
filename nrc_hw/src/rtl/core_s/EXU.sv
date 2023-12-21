@@ -24,7 +24,11 @@ module EXU #(
     input  logic [XLEN-1:0]    rs1_rdata,
     input  logic [XLEN-1:0]    rs2_rdata,
     input  logic [XLEN-1:0]    imm,
-    output logic [XLEN-1:0]    alu_result
+    input  logic               bxx,
+    input  logic               jump,
+    output logic [XLEN-1:0]    rd_wdata,
+    output logic               pc_branch,
+    output logic [XLEN-1:0]    target_pc
 );
 
     // -------------------------------------------
@@ -33,7 +37,15 @@ module EXU #(
 
     logic [XLEN-1:0]    alu_src1;
     logic [XLEN-1:0]    alu_src2;
+    logic [XLEN-1:0]    alu_result;
+    logic [XLEN-1:0]    pc_plus4;
 
+    // -------------------------------------------
+    // Branch and Jump logic
+    // -------------------------------------------
+
+    assign pc_branch = jump;
+    assign target_pc = alu_result; // target pc is calculated by ALU
 
     // -------------------------------------------
     // ALU and its glue logic
@@ -53,5 +65,13 @@ module EXU #(
         .alu_src1(alu_src1),
         .alu_src2(alu_src2),
         .alu_result(alu_result));
+
+
+    // -------------------------------------------
+    // Glue logic for rd write data
+    // -------------------------------------------
+    assign pc_plus4 = pc + 4;
+    // For JAL/JALR, pc + 4 is written into rd
+    assign rd_wdata = jump ? pc_plus4 : alu_result;
 
 endmodule

@@ -19,6 +19,8 @@ module IFU #(
     input  logic                clk,
     input  logic                rst_b,
 
+    input  logic                pc_branch,
+    input  logic [XLEN-1:0]     target_pc,
     output logic [XLEN-1:0]     pc
 );
 
@@ -27,7 +29,12 @@ module IFU #(
             pc <= PC_RST_VEC;
         end
         else begin
-            pc <= pc + 4;
+            if (pc_branch) begin
+                pc <= target_pc;
+            end
+            else begin
+                pc <= pc + 4;
+            end
         end
     end
 

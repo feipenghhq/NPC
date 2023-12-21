@@ -12,7 +12,7 @@
 
 module core_s #(
     parameter XLEN       = 32,
-    parameter PC_RST_VEC = 32'h00000000,    // PC reset vector
+    parameter PC_RST_VEC = 32'h80000000,    // PC reset vector
     parameter REGID_W    = 5                // Register ID width
 ) (
 
@@ -58,7 +58,9 @@ module core_s #(
     logic [XLEN-1:0]    rs1_rdata;
     logic [XLEN-1:0]    rs2_rdata;
     // From EXU
-    logic [XLEN-1:0]    alu_result;
+    logic [XLEN-1:0]    rd_wdata;
+    logic               pc_branch;
+    logic [XLEN-1:0]    target_pc;
 
     // -------------------------------------------
     // Module Instantiation
@@ -71,6 +73,8 @@ module core_s #(
     u_IFU (
         .clk(clk),
         .rst_b(rst_b),
+        .pc_branch(pc_branch),
+        .target_pc(target_pc),
         .pc(pc));
 
     // IDU
@@ -94,7 +98,7 @@ module core_s #(
         .rs2_addr(dec_rs2_addr),
         .rs2_rdata(rs2_rdata),
         .rd_addr(dec_rd_addr),
-        .rd_wdata(alu_result),
+        .rd_wdata(rd_wdata),
         .rd_write(dec_rd_write));
 
     // EXU
@@ -112,7 +116,28 @@ module core_s #(
         .rs1_rdata(rs1_rdata),
         .rs2_rdata(rs2_rdata),
         .imm(dec_imm),
-        .alu_result(alu_result));
+        .bxx(dec_bxx),
+        .jump(dec_jump),
+        .pc_branch(pc_branch),
+        .target_pc(target_pc),
+        .rd_wdata(rd_wdata));
+
+
+    // -------------------------------------------
+    // _Verilator DPI
+    // -------------------------------------------
+    `ifdef VERILATOR
+
+        import "DPI-C" function void dpi_set_ebreak();
+
+        always @(posedge clk) begin
+            if (dec_ebreak) begin
+                dpi_set_ebreak();
+            end
+        end
+
+    `endif
+
 
 endmodule
 

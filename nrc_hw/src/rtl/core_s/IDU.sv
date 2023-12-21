@@ -159,7 +159,7 @@ module IDU #(
     assign is_sra  = (rv32i_funct3 == `RV32I_FUNCT3_SRA)  & ((is_itype & rv32i_funct7_0x20) | (is_rtype & rv32i_funct7_0x20));
 
     // ebreak
-    assign is_ebreak = is_system & rv32i_funct3_0 & rv32i_funct7_0x00 & (inst[24:20] == 0) & (inst[19:15] == 0) & (inst[11:7] == 0);
+    assign is_ebreak = is_system & rv32i_funct3_0 & rv32i_funct7_0x00 & (inst[24:20] == 1) & (inst[19:15] == 0) & (inst[11:7] == 0);
 
     // -------------------------------------------
     // Control signal generation
@@ -167,9 +167,9 @@ module IDU #(
 
     // ALU source 1 selection
     // RS1 value : Default
-    // PC        : JAL/JALR/AUIPC/BRANCH
+    // PC        : JAL/AUIPC/BRANCH
     // Zero      : LUI
-    assign dec_alu_src1_sel_pc = is_jal | is_jalr | is_auipc | is_bxx;
+    assign dec_alu_src1_sel_pc = is_jal | is_auipc | is_bxx;
     assign dec_alu_src1_sel_0  = is_lui;
     assign dec_alu_src1_sel_rs1 = ~(dec_alu_src1_sel_pc | dec_alu_src1_sel_0);
 
@@ -182,8 +182,9 @@ module IDU #(
     // ALU/BRANCH/MEM Opcode is the same as Funct3
     assign dec_bxx_opcode = rv32i_funct3;
     assign dec_mem_opcode = rv32i_funct3;
-    assign dec_alu_opcode[2:0] = rv32i_funct3;
-    assign dec_alu_opcode[3]   = inst[30]; // distinguish between ADD/SUB, SRL/SRA
+    // ALU opcode is ADD for jal/jalr
+    // For I/R type instruction, inst[30] is used to distinguish between ADD/SUB, SRL/SRA
+    assign dec_alu_opcode[3:0] = dec_jump ? {1'b0, `RV32I_FUNCT3_ADD} : {inst[30], rv32i_funct3};
 
     // Memory read/write
     assign dec_mem_read  = is_load;
@@ -195,6 +196,9 @@ module IDU #(
 
     // ebreak
     assign dec_ebreak = is_ebreak;
+
+    // registr write
+    assign dec_rd_write = is_lui | is_auipc | dec_jump | is_itype | is_rtype | is_load;
 
     // -------------------------------------------
     // Immediate generation
