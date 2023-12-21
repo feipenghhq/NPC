@@ -10,7 +10,6 @@
  * ------------------------------------------------------------------------------------------------
  */
 
-#include "common.h"
 #include "memory.h"
 #include "config.h"
 
@@ -28,6 +27,8 @@ size_t load_image(const char *img) {
 
     fseek(fp, 0, SEEK_END);
     size_t size = ftell(fp);
+
+    rewind(fp);
     size_t rc = fread((void *) mem, size, 1, fp);
     Check(rc, "Failed to read the image file: %s", img);
     log_info("Image file loaded");
@@ -35,4 +36,9 @@ size_t load_image(const char *img) {
     return size;
 }
 
+word_t mem_read(word_t addr) {
+    uintptr_t offset = addr - MEM_OFFSET;
+    uintptr_t paddr = (uintptr_t) mem + offset;
+    return *(word_t *) (paddr);
+}
 

@@ -11,10 +11,13 @@
  */
 
 #include "Core_sTop.h"
+#include "memory.h"
 
 #define MAX_SIM_TIME 100
 
-Core_sTop::Core_sTop(int argc, char *argv[], const char *name, bool trace):Top(argc, argv, name, trace) {
+bool check_finish(Top *top, const char *suite);
+
+Core_sTop::Core_sTop(int argc, char *argv[], const test_info_s *test_info):Top(argc, argv, test_info) {
     top = new Vcore_s();
 }
 
@@ -24,7 +27,7 @@ Core_sTop::~Core_sTop() {
 
 void Core_sTop::init_trace(const char *name, int level) {
     Verilated::traceEverOn(true);
-    if (trace) {
+    if (test_info->trace) {
         m_trace = new VerilatedVcdC;
         top->trace(m_trace, level);
         m_trace->open(name);
@@ -54,16 +57,23 @@ bool Core_sTop::run(int step) {
     int cnt = 0;
     assert(top->clk == 1); // we want to change data on negedge
     while(!finished && ((step < 0 && sim_time < MAX_SIM_TIME)  || cnt < step)) {
+        top->inst = mem_read(top->pc);
         clk_tick();
-        // FIXME: update the instruction
         clk_tick();
         cnt++;
-        // FIXME: implement the finish and success
-        //finished = ts->check_finish();
-        //if (finished) success = ts->check_success();
+        finished = check_finish(this, test_info->suite);
+        if (finished) {
+            return finished;
+        }
     }
     return finished;
 }
 
 void Core_sTop::report() {}
+
+extern bool dpi_ebreak;
+
+void dpi_set_ebreak() {
+    dpi_ebreak = true;
+}
 

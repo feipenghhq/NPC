@@ -25,12 +25,11 @@ class Top {
 public:
     VerilatedVcdC *m_trace;     // Waveform trace
     vluint64_t sim_time;        // simulation time
-    bool trace;
-    const char *name;
+    const test_info_s *test_info;
     bool finished;
     bool success;
 
-    Top(int argc, char *argv[], const char *name, bool trace);
+    Top(int argc, char *argv[], const test_info_s *test_info);
     ~Top();
 
     virtual void init_trace(const char *name, int level)=0;

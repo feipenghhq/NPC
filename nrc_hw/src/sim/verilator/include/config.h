@@ -13,7 +13,8 @@
 #ifndef __CONFHG_H__
 #define __CONFIG_H__
 
-#define PC_RESET_OFFSET 0x0
+#define PC_RESET_OFFSET 0x80000000
+#define MEM_OFFSET      0x80000000
 #define MSIZE           0x80000000
 
 #endif

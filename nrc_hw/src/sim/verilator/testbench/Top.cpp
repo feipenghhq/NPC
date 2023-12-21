@@ -15,10 +15,9 @@
 
 #include "Top.h"
 
-Top::Top(int argc, char *argv[], const char *name, bool trace) {
+Top::Top(int argc, char *argv[], const test_info_s *test_info) {
     Verilated::commandArgs(argc, argv);
-    this->name = name;
-    this->trace = trace;
+    this->test_info = test_info;
     sim_time = 0;
     finished = false;
     success = false;

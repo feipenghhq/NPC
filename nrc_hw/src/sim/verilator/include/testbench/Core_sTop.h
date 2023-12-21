@@ -16,6 +16,7 @@
 #include <verilated.h>
 #include <verilated_vcd_c.h>
 #include "Vcore_s.h"
+#include "Vcore_s__Dpi.h"
 #include "common.h"
 #include "Top.h"
 
@@ -26,7 +27,7 @@ private:
     const int reset_cycle = 10;
 
 public:
-    Core_sTop(int argc, char *argv[], const char *name, bool trace);
+    Core_sTop(int argc, char *argv[], const test_info_s *test_info);
     ~Core_sTop();
 
     virtual void init_trace(const char *name, int level);
