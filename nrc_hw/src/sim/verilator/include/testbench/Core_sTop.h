@@ -16,6 +16,8 @@
 #include <verilated.h>
 #include <verilated_vcd_c.h>
 #include "Vcore_s.h"
+#include "Vcore_s_core_s.h"
+#include "Vcore_s_RegFile.h"
 #include "Vcore_s__Dpi.h"
 #include "common.h"
 #include "Top.h"
@@ -34,7 +36,7 @@ public:
     virtual void reset();
     virtual void clk_tick();
     virtual bool run(int step);
-    virtual void report();
+    virtual word_t reg_id2val(int id);
 };
 
 #endif

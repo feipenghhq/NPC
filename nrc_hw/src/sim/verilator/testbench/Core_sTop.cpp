@@ -16,9 +16,11 @@
 #define MAX_SIM_TIME 100
 
 bool check_finish(Top *top, const char *suite);
+bool check_pass(Top *top, const char *suite);
+extern bool dpi_ebreak;
 
 Core_sTop::Core_sTop(int argc, char *argv[], const test_info_s *test_info):Top(argc, argv, test_info) {
-    top = new Vcore_s();
+    top = new Vcore_s("core_s");
 }
 
 Core_sTop::~Core_sTop() {
@@ -63,15 +65,16 @@ bool Core_sTop::run(int step) {
         cnt++;
         finished = check_finish(this, test_info->suite);
         if (finished) {
+            success = check_pass(this, test_info->suite);
             return finished;
         }
     }
     return finished;
 }
 
-void Core_sTop::report() {}
-
-extern bool dpi_ebreak;
+word_t Core_sTop::reg_id2val(int id) {
+    return top->core_s->u_RegFile->regs[id];
+}
 
 void dpi_set_ebreak() {
     dpi_ebreak = true;

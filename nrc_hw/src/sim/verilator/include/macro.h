@@ -37,4 +37,12 @@
 
 #define Check(cond, msg, ...) do {if(!(cond)) {log_err(msg, ##__VA_ARGS__); errno=0; exit(1);}} while(0)
 
+
+// -------------------------------
+// Helper Macro
+// ------------------------------
+
+#define ARRLEN(arr) (sizeof(arr) / sizeof(arr[0]))
+
+
 #endif

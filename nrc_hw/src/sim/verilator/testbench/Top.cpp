@@ -15,6 +15,8 @@
 
 #include "Top.h"
 
+int reg_str2id(const char *);
+
 Top::Top(int argc, char *argv[], const test_info_s *test_info) {
     Verilated::commandArgs(argc, argv);
     this->test_info = test_info;
@@ -30,5 +32,20 @@ Top::~Top() {
         m_trace->close();
         delete m_trace;
     }
+}
+
+word_t Top::reg_str2val(const char *s) {
+    int id = reg_str2id(s);
+    return reg_id2val(id);
+}
+
+bool Top::report() {
+    if (success) {
+        log_info("Test Passed!");
+    }
+    else {
+        log_err("Test Failed!");
+    }
+    return success;
 }
 

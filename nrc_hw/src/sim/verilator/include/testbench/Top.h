@@ -38,7 +38,10 @@ public:
     virtual void reset()=0;
     virtual void clk_tick()=0;
     virtual bool run(int step)=0;
-    virtual void report()=0;
+    virtual bool report();
+
+    virtual word_t reg_str2val(const char *s);
+    virtual word_t reg_id2val(int id)=0;
 };
 
 inline void Top::dump() {

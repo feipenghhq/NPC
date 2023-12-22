@@ -23,3 +23,15 @@ bool check_finish(Top *top, const char *suite) {
         return ics_check_finish();
     assert(0);
 }
+
+inline bool ics_check_pass(Top *top) {
+    return top->reg_str2val("a0") == 0;
+}
+
+
+bool check_pass(Top *top, const char *suite) {
+    if (strcmp(suite, SUITE_ICS_AM_CPU_TEST) == 0)
+        return ics_check_pass(top);
+    assert(0);
+}
+
