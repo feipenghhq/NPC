@@ -16,10 +16,13 @@ endif
 
 IMAGE_PATH = $(AM_KERNELS_PATH)/tests/cpu-tests/build
 
+TEST_NAME_MAX_LEN = 26
+
 # get all the tests in the test suites
 ICS_AM_CPU_TESTS = $(basename $(notdir $(shell find $(IMAGE_PATH) -name "*.bin")))
 
-TESTS += ICS_AM_CPU_TESTS
+ics_am_cpu_tests: $(ICS_AM_CPU_TESTS)
+	@cat $(RESULT)
 
 $(ICS_AM_CPU_TESTS): $(OBJECT)
 	$(call run_sim,$(IMAGE_PATH)/$@.bin,$(TEST_SUITES),$@,$(TOP))

@@ -38,10 +38,21 @@ ifeq ($(WAVE),1)
 ARG_WAVE = --wave
 endif
 
+# File to store test result
+RESULT = $(VERILATOR_DIR)/.result
+$(shell > $(RESULT))
+
 ## Object
 OBJECT = V$(TOP)
 VPASS = $(VERILATOR_DIR)/.VPASS
 BPASS = $(VERILATOR_DIR)/.BPASS
+
+## Terminal color
+COLOR_RED   = \033[1;31m
+COLOR_GREEN = \033[1;32m
+COLOR_NONE  = \033[0m
+
+TEST_NAME_MAX_LEN ?= 10
 
 # 2. Set test suites
 TEST_SUITES ?= ics-am-cpu-test
@@ -55,7 +66,14 @@ include src/sim/verilator/scripts/$(TEST_SUITES).mk
 ### Usage: $(call run_sim,image,suite,test,dut)
 define run_sim
 	$(info --> Running Test)
-	@cd $(VERILATOR_DIR) && ./$(OBJECT) --image $(1) --suite $(2) --test $(3) --dut $(4) $(ARG_WAVE)
+	@/bin/echo -e "run:\n\t@cd $(VERILATOR_DIR) && ./$(OBJECT) --image $(1) --suite $(2) --test $(3) --dut $(4) $(ARG_WAVE)" \
+		>> $(VERILATOR_DIR)/makefile.$(3)
+	@if make -s -f $(VERILATOR_DIR)/makefile.$(3); then \
+		printf "[%$(TEST_NAME_MAX_LEN)s] $(COLOR_GREEN)%s!$(COLOR_NONE)\n" $(3) PASS >> $(RESULT); \
+	else \
+		printf "[%$(TEST_NAME_MAX_LEN)s] $(COLOR_RED)%s!$(COLOR_NONE)\n" $(3) FAIL >> $(RESULT); \
+	fi
+	@rm $(VERILATOR_DIR)/makefile.$(3)
 endef
 
 ## Build the Verilator executable

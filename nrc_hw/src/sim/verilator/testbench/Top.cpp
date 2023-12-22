@@ -27,7 +27,6 @@ Top::Top(int argc, char *argv[], const test_info_s *test_info) {
 }
 
 Top::~Top() {
-    log_info("Test finished at %ld cycle.", sim_time);
     if (m_trace) {
         m_trace->close();
         delete m_trace;
@@ -40,11 +39,12 @@ word_t Top::reg_str2val(const char *s) {
 }
 
 bool Top::report() {
+    log_info("Test finished at %ld cycle.", sim_time);
     if (success) {
-        log_info("Test Passed!");
+        log_info_color("Test PASS!", ANSI_FG_GREEN);
     }
     else {
-        log_err("Test Failed!");
+        log_err("Test FAIL!");
     }
     return success;
 }

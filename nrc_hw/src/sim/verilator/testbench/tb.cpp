@@ -26,6 +26,7 @@ static void select_top(int argc, char *argv[], test_info_s *test_info) {
 
 
 int run_test(int argc, char *argv[], const argu_s *argu) {
+    bool success;
     test_info_s test_info = {.suite=argu->suite, .test=argu->test, .dut=argu->dut,
         .trace=argu->trace};
     select_top(argc, argv, &test_info);
@@ -33,7 +34,7 @@ int run_test(int argc, char *argv[], const argu_s *argu) {
     load_image(argu->image);
     top->reset();
     top->run(-1);
-    top->report();
+    success = top->report();
     delete top;
-    return 0;
+    return success;
 }

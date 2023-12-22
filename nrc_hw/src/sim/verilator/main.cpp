@@ -14,8 +14,9 @@ extern argu_s argu;
 int run_test(int, char *[], const argu_s *);
 
 int main(int argc, char *argv[]) {
+    bool success;
     parse_args(argc, argv);
-    run_test(argc, argv, &argu);
-    return 0;
+    success = run_test(argc, argv, &argu);
+    return !success; // return 0 if test pass
 }
 
