@@ -45,6 +45,16 @@
 `define RV32I_FUNCT3_BLTU      3'b110
 `define RV32I_FUNCT3_BGEU      3'b111
 
+`define RV32I_FUNCT3_LB        3'b000
+`define RV32I_FUNCT3_LH        3'b001
+`define RV32I_FUNCT3_LW        3'b010
+`define RV32I_FUNCT3_LBU       3'b100
+`define RV32I_FUNCT3_LHU       3'b101
+
+`define RV32I_FUNCT3_SB        3'b000
+`define RV32I_FUNCT3_SH        3'b001
+`define RV32I_FUNCT3_SW        3'b010
+
 // Instruction Field Range
 `define R_PHASE  1:0
 `define R_OPCODE 6:2

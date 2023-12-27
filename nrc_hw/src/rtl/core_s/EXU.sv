@@ -18,7 +18,6 @@ module EXU #(
 ) (
     input  logic [ALUOP_W-1:0] alu_opcode,
     input  logic [BXXOP_W-1:0] bxx_opcode,
-    input  logic [MEMOP_W-1:0] mem_opcode,
     input  logic               alu_src1_sel_rs1,
     input  logic               alu_src1_sel_pc,
     input  logic               alu_src1_sel_0,
@@ -32,7 +31,8 @@ module EXU #(
     input  logic               jump,
     output logic [XLEN-1:0]    rd_wdata,
     output logic               pc_branch,
-    output logic [XLEN-1:0]    target_pc
+    output logic [XLEN-1:0]    target_pc,
+    output logic [XLEN-1:0]    alu_result
 );
 
     // -------------------------------------------
@@ -41,7 +41,6 @@ module EXU #(
 
     logic [XLEN-1:0]    alu_src1;
     logic [XLEN-1:0]    alu_src2;
-    logic [XLEN-1:0]    alu_result;
     logic [XLEN-1:0]    pc_plus4;
     logic               beu_result;
 
@@ -77,7 +76,6 @@ module EXU #(
         .alu_src1(alu_src1),
         .alu_src2(alu_src2),
         .alu_result(alu_result));
-
 
     // -------------------------------------------
     // Glue logic for rd write data

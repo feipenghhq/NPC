@@ -41,6 +41,15 @@ size_t load_image(const char *img) {
 word_t pmem_read(word_t addr) {
     uintptr_t offset = addr - MEM_OFFSET;
     uintptr_t paddr = (uintptr_t) mem + offset;
-    return *(word_t *) (paddr);
+    return *((word_t *) paddr);
+}
+
+void pmem_write(word_t addr, word_t data, char strb) {
+    uintptr_t offset = addr - MEM_OFFSET;
+    uintptr_t paddr = (uintptr_t) mem + offset;
+    // only support for 32b data
+    for (int i = 0; i < 3; i++) {
+        if (strb & (0x1 << i)) *(((byte_t *) paddr) + i) = (byte_t) (strb >> (8*i));
+    }
 }
 

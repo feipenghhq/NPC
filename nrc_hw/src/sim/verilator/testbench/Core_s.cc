@@ -14,7 +14,7 @@
 #include "memory.h"
 #include "tb.h"
 
-#define MAX_SIM_TIME 100
+#define MAX_SIM_TIME 10000
 
 // ---------------------------------------------
 // Function prototype and global variable
@@ -66,7 +66,6 @@ void Core_s::reset() {
 bool Core_s::run(int step) {
     int cnt = 0;
     while(!finished && ((step < 0 && sim_time < MAX_SIM_TIME)  || cnt < step)) {
-        top->inst = pmem_read(top->pc);
         clk_tick();
         clk_tick();
         cnt++;
@@ -87,7 +86,14 @@ word_t Core_s::reg_id2val(int id) {
 // DPI function
 // ---------------------------------------------
 
-void dpi_set_ebreak() {
+extern "C" void dpi_set_ebreak() {
     dpi_ebreak = true;
 }
 
+extern "C" void dpi_pmem_read(int addr, int *rdata) {
+    *rdata = pmem_read(addr);
+}
+
+extern "C" void dpi_pmem_write(int addr, int data, char strb) {
+    pmem_write(addr, data, strb);
+}

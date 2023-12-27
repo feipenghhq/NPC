@@ -19,8 +19,7 @@ module core_s #(
     input  logic                clk,
     input  logic                rst_b,
 
-    output logic [XLEN-1:0]     pc,
-    input  logic [XLEN-1:0]     inst        // input instruction
+    output logic [XLEN-1:0]     pc
 );
 
     // -------------------------------------------
@@ -58,9 +57,34 @@ module core_s #(
     logic [XLEN-1:0]    rs1_rdata;
     logic [XLEN-1:0]    rs2_rdata;
     // From EXU
-    logic [XLEN-1:0]    rd_wdata;
+    logic [XLEN-1:0]    exu_rd_wdata;
     logic               pc_branch;
     logic [XLEN-1:0]    target_pc;
+    logic [XLEN-1:0]    alu_result;
+    // From MEU
+    logic [XLEN-1:0]    mem_rd_wdata;
+    // MISC
+    logic [XLEN-1:0]    rd_wdata;
+
+    // Memory
+    logic [XLEN-1:0]    inst;       // input instruction
+    logic               data_valid; // data memory request
+    logic               data_wen;   // data memory write enable
+    logic [XLEN-1:0]    data_addr;  // data memory address
+    logic [3:0]         data_wstrb; // data memory write strobe
+    logic [XLEN-1:0]    data_wdata; // data memory write data
+    logic [XLEN-1:0]    data_rdata; // data memory read data
+
+    // -------------------------------------------
+    // Glue logic
+    // -------------------------------------------
+
+    // Memory control
+    assign data_addr = alu_result;
+    assign data_wdata = rs2_rdata;
+
+    // Select which source goes to rd
+    assign rd_wdata = dec_mem_read ? mem_rd_wdata : exu_rd_wdata;
 
     // -------------------------------------------
     // Module Instantiation
@@ -110,7 +134,6 @@ module core_s #(
     u_EXU (
         .alu_opcode(dec_alu_opcode),
         .bxx_opcode(dec_bxx_opcode),
-        .mem_opcode(dec_mem_opcode),
         .alu_src1_sel_rs1(dec_alu_src1_sel_rs1),
         .alu_src1_sel_pc(dec_alu_src1_sel_pc),
         .alu_src1_sel_0(dec_alu_src1_sel_0),
@@ -124,8 +147,23 @@ module core_s #(
         .jump(dec_jump),
         .pc_branch(pc_branch),
         .target_pc(target_pc),
-        .rd_wdata(rd_wdata));
+        .rd_wdata(exu_rd_wdata),
+        .alu_result(alu_result));
 
+    // MEU
+    MEU #(
+         .XLEN(XLEN),
+         .MEMOP_W(MEMOP_W))
+    u_MEU (
+        .mem_opcode(dec_mem_opcode),
+        .mem_read(dec_mem_read),
+        .mem_write(dec_mem_write),
+        .byte_addr(alu_result[1:0]),
+        .rd_wdata(mem_rd_wdata),
+        .data_valid(data_valid),
+        .data_wen(data_wen),
+        .data_wstrb(data_wstrb),
+        .data_rdata(data_rdata));
 
     // -------------------------------------------
     // _Verilator DPI
@@ -133,10 +171,31 @@ module core_s #(
     `ifdef VERILATOR
 
         import "DPI-C" function void dpi_set_ebreak();
+        import "DPI-C" function void dpi_pmem_read(input int addr, output int rdata);
+        import "DPI-C" function void dpi_pmem_write(input int addr, input int data, input byte strb);
 
+        // set ebreak
         always @(posedge clk) begin
             if (dec_ebreak) begin
                 dpi_set_ebreak();
+            end
+        end
+
+        // fetch instruction
+        always @(*) begin
+            dpi_pmem_read(pc, inst);
+        end
+
+        // data memory access
+        always @(*) begin
+            if (data_valid) begin
+                dpi_pmem_read(data_addr, data_rdata);
+                if (data_wen) begin
+                    dpi_pmem_write(data_addr, data_wdata, {4'b0, data_wstrb});
+                end
+            end
+            else begin
+                data_rdata = 0;
             end
         end
 

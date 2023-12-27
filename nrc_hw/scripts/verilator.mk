@@ -83,13 +83,13 @@ $(BPASS): $(VPASS)
 ### Compile the RTL and TB
 compile: $(VPASS)
 
-$(VPASS): $(V_SRCS) $(C_SRCS) $(CXX_SRCS)
+$(VPASS): $(VERILOG_SRCS) $(C_SRCS) $(CXX_SRCS)
 	$(info --> Verilatring)
 	@mkdir -p $(BUILD_DIR)
 	@verilator $(VERILATOR_FLAGS) $(CFLAGS) $(RTL_SRCS) $(TB_SRCS) && touch $@
 
 ### Lint the RTL
-lint: $(V_SRCS)
+lint: $(VERILOG_SRCS)
 	$(info --> Linting RTL)
 	@verilator --lint-only $(RTL_OPTS) $(RTL_SRCS)
 
@@ -104,6 +104,7 @@ include src/sim/verilator/scripts/$(TEST_SUITES).mk
 
 ### File to store test result
 RESULT = $(OUTPUT_DIR)/.result
+$(shell mkdir -p $(OUTPUT_DIR))
 $(shell > $(RESULT))
 
 ### Define function to run simulation. Usage: $(call run_sim,image,suite,test,dut)
