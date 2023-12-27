@@ -5,18 +5,16 @@
 // Author: Heqing Huang
 // Date Created: 12/17/2023
 // ------------------------------------------------------------------------------------------------
-// Main function for the core_s
+// Main function for the verilator
 // ------------------------------------------------------------------------------------------------
 
 #include "utils.h"
 
-extern argu_s argu;
-int run_test(int, char *[], const argu_s *);
+int tb_exec(int, char *[]);
 
 int main(int argc, char *argv[]) {
     bool success;
-    parse_args(argc, argv);
-    success = run_test(argc, argv, &argu);
+    success = tb_exec(argc, argv);
     return !success; // return 0 if test pass
 }
 

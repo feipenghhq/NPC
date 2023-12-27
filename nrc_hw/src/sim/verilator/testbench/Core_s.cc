@@ -6,44 +6,51 @@
  * Date Created: 12/19/2023
  *
  * ------------------------------------------------------------------------------------------------
- *  Core_sTop class: Provide environment for Core_s CPU design
+ *  Core_s class: Provide environment for Core_s CPU design
  * ------------------------------------------------------------------------------------------------
  */
 
-#include "Core_sTop.h"
+#include "Core_s.h"
 #include "memory.h"
+#include "tb.h"
 
 #define MAX_SIM_TIME 100
 
-bool check_finish(Top *top, const char *suite);
-bool check_pass(Top *top, const char *suite);
-extern bool dpi_ebreak;
+// ---------------------------------------------
+// Function prototype and global variable
+// ---------------------------------------------
 
-Core_sTop::Core_sTop(int argc, char *argv[], const test_info_s *test_info):Top(argc, argv, test_info) {
+bool dpi_ebreak;
+
+// ---------------------------------------------
+// Class functions
+// ---------------------------------------------
+
+Core_s::Core_s(int argc, char *argv[], const test_info *info):Dut(argc, argv, info) {
     top = new Vcore_s("core_s");
 }
 
-Core_sTop::~Core_sTop() {
+Core_s::~Core_s() {
     delete top;
 }
 
-void Core_sTop::init_trace(const char *name, int level) {
+void Core_s::init_trace(const char *name, int level) {
     Verilated::traceEverOn(true);
-    if (test_info->trace) {
+    if (info->trace) {
         m_trace = new VerilatedVcdC;
         top->trace(m_trace, level);
         m_trace->open(name);
     }
 }
 
-void Core_sTop::clk_tick() {
+void Core_s::clk_tick() {
     top->clk ^= 1;
     top->eval();
     dump();
     sim_time++;
 }
 
-void Core_sTop::reset() {
+void Core_s::reset() {
     top->clk = 1; // initialize clock
     top->rst_b = 0;
     top->eval();
@@ -53,28 +60,32 @@ void Core_sTop::reset() {
         clk_tick();
     }
     top->rst_b = 1;
+    assert(top->clk == 1); // we want to change data on negedge
 }
 
-bool Core_sTop::run(int step) {
+bool Core_s::run(int step) {
     int cnt = 0;
-    assert(top->clk == 1); // we want to change data on negedge
     while(!finished && ((step < 0 && sim_time < MAX_SIM_TIME)  || cnt < step)) {
-        top->inst = mem_read(top->pc);
+        top->inst = pmem_read(top->pc);
         clk_tick();
         clk_tick();
         cnt++;
-        finished = check_finish(this, test_info->suite);
+        finished = check_finish(this, info->suite);
         if (finished) {
-            success = check_pass(this, test_info->suite);
+            success = check_pass(this, info->suite);
             return finished;
         }
     }
     return finished;
 }
 
-word_t Core_sTop::reg_id2val(int id) {
+word_t Core_s::reg_id2val(int id) {
     return top->core_s->u_RegFile->regs[id];
 }
+
+// ---------------------------------------------
+// DPI function
+// ---------------------------------------------
 
 void dpi_set_ebreak() {
     dpi_ebreak = true;

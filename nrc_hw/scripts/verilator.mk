@@ -6,98 +6,117 @@
 # Date Created: 12/14/2023
 # ------------------------------------------------------------------------------------------------
 
-# 1. Set build flags, RTL source files and C/CPP source files
 
-## Directory
-VERILATOR_DIR = $(BUILD_DIR)/verilator
+## --------------------------------------------------------
+## 1. Set build flags
+## --------------------------------------------------------
+
+### Directory
+OUTPUT_DIR = $(BUILD_DIR)/verilator
+
+### Path
+VERILATOR_PATH = $(shell realpath src/sim/verilator)
 
 ## verilator build flags and options
 VERILATOR_FLAGS += --x-assign unique --x-initial unique
 VERILATOR_FLAGS += --cc --exe -j 0
-VERILATOR_FLAGS += --Mdir $(VERILATOR_DIR) --top-module $(TOP)
+VERILATOR_FLAGS += --Mdir $(OUTPUT_DIR) --top-module $(TOP)
 VERILATOR_FLAGS += --trace
 
-## CFLAGS for g++ build
+### CFLAGS for g++ build
 CFLAGS += -CFLAGS -mcmodel=large
 
-## Include CPP filelist
-include src/sim/verilator/filelist.mk
-
-## RTL source file
-RTL_SRCS  += $(V_SRCS)
-RTL_SRCS  += $(addprefix -I,$(V_INCS))
-
-## TB source file
-TB_SRCS   += $(CPP_SRCS)
-TB_SRCS   += $(addprefix -CFLAGS -I, $(abspath $(CPP_INCS)))
-
-## Verilator trace
+### Verilator trace
 WAVE	 ?= 0
 ARG_WAVE ?=
 ifeq ($(WAVE),1)
 ARG_WAVE = --wave
 endif
 
-# File to store test result
-RESULT = $(VERILATOR_DIR)/.result
-$(shell > $(RESULT))
+### Misc config
+TEST_NAME_MAX_LEN ?= 10
 
-## Object
-OBJECT = V$(TOP)
-VPASS = $(VERILATOR_DIR)/.VPASS
-BPASS = $(VERILATOR_DIR)/.BPASS
-
-## Terminal color
 COLOR_RED   = \033[1;31m
 COLOR_GREEN = \033[1;32m
 COLOR_NONE  = \033[0m
 
-TEST_NAME_MAX_LEN ?= 10
+## --------------------------------------------------------
+## 2. RTL source files and C/CPP source files
+## --------------------------------------------------------
 
-# 2. Set test suites
-TEST_SUITES ?= ics-am-cpu-test
+### RTL source file
+RTL_SRCS  += $(VERILOG_SRCS)
+RTL_SRCS  += $(addprefix -I,$(VERILOG_INCS))
 
-## Include the test suites specific makefile
-include src/sim/verilator/scripts/$(TEST_SUITES).mk
+### C/CPP source file
 
-# 3. Commands
+### Verilator c and cpp source file
+C_SRCS   += $(shell find $(VERILATOR_PATH) -name "*.c")
+CXX_SRCS += $(shell find $(VERILATOR_PATH) -name "*.cc")
 
-## Define function to run simulation
-### Usage: $(call run_sim,image,suite,test,dut)
-define run_sim
-	$(info --> Running Test)
-	@/bin/echo -e "run:\n\t@cd $(VERILATOR_DIR) && ./$(OBJECT) --image $(1) --suite $(2) --test $(3) --dut $(4) $(ARG_WAVE)" \
-		>> $(VERILATOR_DIR)/makefile.$(3)
-	@if make -s -f $(VERILATOR_DIR)/makefile.$(3); then \
-		printf "[%$(TEST_NAME_MAX_LEN)s] $(COLOR_GREEN)%s!$(COLOR_NONE)\n" $(3) PASS >> $(RESULT); \
-	else \
-		printf "[%$(TEST_NAME_MAX_LEN)s] $(COLOR_RED)%s!$(COLOR_NONE)\n" $(3) FAIL >> $(RESULT); \
-	fi
-	@rm $(VERILATOR_DIR)/makefile.$(3)
-endef
+### Verilator include directory
+C_INCS    += $(sort $(dir $(shell find $(VERILATOR_PATH) -name "*.h")))
 
-## Build the Verilator executable
+### All C/CPP files
+TB_SRCS   += $(C_SRCS)
+TB_SRCS   += $(CXX_SRCS)
+TB_SRCS   += $(addprefix -CFLAGS -I, $(abspath $(C_INCS)))
+
+## --------------------------------------------------------
+## 3. Target and Commands to build executable
+## --------------------------------------------------------
+
+### Object
+OBJECT = V$(TOP)
+VPASS = $(OUTPUT_DIR)/.VPASS
+BPASS = $(OUTPUT_DIR)/.BPASS
+
+### Build the Verilator executable
 build: $(OBJECT)
 
 $(OBJECT): $(BPASS)
 
 $(BPASS): $(VPASS)
 	$(info --> Building Verilator Executable)
-	@$(MAKE) V$(TOP) -C $(VERILATOR_DIR) -f V$(TOP).mk -s && touch $@
+	@$(MAKE) V$(TOP) -C $(OUTPUT_DIR) -f V$(TOP).mk -s && touch $@
 
-## Compile the RTL and TB
+### Compile the RTL and TB
 compile: $(VPASS)
 
-$(VPASS): $(V_SRCS) $(V_INCS) $(CPP_SRCS)
+$(VPASS): $(V_SRCS) $(C_SRCS) $(CXX_SRCS)
 	$(info --> Verilatring)
 	@mkdir -p $(BUILD_DIR)
 	@verilator $(VERILATOR_FLAGS) $(CFLAGS) $(RTL_SRCS) $(TB_SRCS) && touch $@
 
-## Lint the RTL
+### Lint the RTL
 lint: $(V_SRCS)
 	$(info --> Linting RTL)
 	@verilator --lint-only $(RTL_OPTS) $(RTL_SRCS)
 
-## clean
-clean_verilator:
-	rm -rf $(VERILATOR_DIR)
+## --------------------------------------------------------
+## 4. Set the test suite and command to run simulation
+## --------------------------------------------------------
+
+TEST_SUITES ?= ics-am-cpu-test
+
+### Include the test suites specific makefile
+include src/sim/verilator/scripts/$(TEST_SUITES).mk
+
+### File to store test result
+RESULT = $(OUTPUT_DIR)/.result
+$(shell > $(RESULT))
+
+### Define function to run simulation. Usage: $(call run_sim,image,suite,test,dut)
+define run_sim
+	$(info --> Running Test)
+	@/bin/echo -e "run:\n\t@cd $(OUTPUT_DIR) && ./$(OBJECT) \
+		--image $(1) --suite $(2) --test $(3) --dut $(4) $(ARG_WAVE)" \
+		>> $(OUTPUT_DIR)/makefile.$(3)
+	@if make -s -f $(OUTPUT_DIR)/makefile.$(3); then \
+		printf "[%$(TEST_NAME_MAX_LEN)s] $(COLOR_GREEN)%s!$(COLOR_NONE)\n" $(3) PASS >> $(RESULT); \
+	else \
+		printf "[%$(TEST_NAME_MAX_LEN)s] $(COLOR_RED)%s!$(COLOR_NONE)\n" $(3) FAIL >> $(RESULT); \
+	fi
+	-@rm $(OUTPUT_DIR)/makefile.$(3)
+endef
+

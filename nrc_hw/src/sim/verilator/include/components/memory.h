@@ -3,14 +3,20 @@
  *
  * Project: NRC
  * Author: Heqing Huang
- * Date Created: 12/20/2023
+ * Date Created: 12/18/2023
  *
  * ------------------------------------------------------------------------------------------------
- *  dpi: dpi related function
+ * memory: memory related functions for the verilator testbench
  * ------------------------------------------------------------------------------------------------
  */
 
-#include <stdbool.h>
+#ifndef __MEMORY_H__
+#define __MEMORY_H__
 
-bool dpi_ebreak;
+#include "common.h"
 
+size_t load_image(const char *img);
+word_t pmem_read(word_t addr);
+
+
+#endif

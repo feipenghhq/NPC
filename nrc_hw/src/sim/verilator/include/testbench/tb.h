@@ -3,20 +3,20 @@
  *
  * Project: NRC
  * Author: Heqing Huang
- * Date Created: 12/18/2023
+ * Date Created: 12/22/2023
  *
  * ------------------------------------------------------------------------------------------------
- * memory: memory related functions for the verilator testbench
+ *  Header file for tb related functions
  * ------------------------------------------------------------------------------------------------
  */
 
-#ifndef __MEMORY_H__
-#define __MEMORY_H__
+#ifndef __TB_H__
+#define __TB_H__
 
-#include "common.h"
+#include "Dut.h"
 
-size_t load_image(const char *img);
-word_t mem_read(word_t addr);
+bool check_finish(Dut *top, const char *suite);
 
+bool check_pass(Dut *top, const char *suite);
 
 #endif

@@ -33,12 +33,13 @@ typedef uint32_t word_t;
 // define name for suite
 #define SUITE_ICS_AM_CPU_TEST "ics-am-cpu-test"
 
-// typedef
+// test information
 typedef struct test_info {
+    char *image;    // test image
     char *suite;    // test suite name
     char *test;     // test name
     char *dut;      // rtl top level
     bool trace;     // dump the waveform
-} test_info_s;
+} test_info;
 
 #endif

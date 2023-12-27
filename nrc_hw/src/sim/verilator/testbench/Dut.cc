@@ -6,39 +6,53 @@
  * Date Created: 12/19/2023
  *
  * ------------------------------------------------------------------------------------------------
- *  Top class: Provide environment for different CPU design
+ *  Dut class: Provide environment for different CPU design
  *  - Provide API to access the design internal signal and data
  *  - Provide API to common simulation task
  *  - Provide basic simulation flow
  * ------------------------------------------------------------------------------------------------
  */
 
-#include "Top.h"
+#include "Dut.h"
+
+// ---------------------------------------------
+// Function prototype and global variable
+// ---------------------------------------------
 
 int reg_str2id(const char *);
 
-Top::Top(int argc, char *argv[], const test_info_s *test_info) {
+// ---------------------------------------------
+// Class functions
+// ---------------------------------------------
+
+Dut::Dut(int argc, char *argv[], const test_info *info) {
     Verilated::commandArgs(argc, argv);
-    this->test_info = test_info;
+    this->info = info;
     sim_time = 0;
+    m_trace = NULL;
     finished = false;
     success = false;
-    m_trace = NULL;
 }
 
-Top::~Top() {
+Dut::~Dut() {
     if (m_trace) {
         m_trace->close();
         delete m_trace;
     }
 }
 
-word_t Top::reg_str2val(const char *s) {
+word_t Dut::reg_str2val(const char *s) {
     int id = reg_str2id(s);
     return reg_id2val(id);
 }
 
-bool Top::report() {
+void Dut::dump() {
+    if (m_trace) {
+        m_trace->dump(sim_time);
+    }
+}
+
+bool Dut::report() {
     log_info("Test finished at %ld cycle.", sim_time);
     if (success) {
         log_info_color("Test PASS!", ANSI_FG_GREEN);

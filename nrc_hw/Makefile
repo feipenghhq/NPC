@@ -13,9 +13,10 @@ BUILD_DIR = $(WORK_DIR)/build
 # Select Flow
 FLOW ?= sim
 
-# Select Target CPU
+# Select Target CPU Design
 CPU ?= CORE_S
 
+# Select Different Top based on CPU
 ifeq ($(CPU),CORE_S)
 TOP = core_s
 endif
@@ -23,17 +24,16 @@ endif
 # Include RTL filelist
 include src/rtl/filelist.mk
 
-# Include verilator
+# Include verilator flow
 ifeq ($(FLOW),sim)
 include scripts/verilator.mk
 endif
 
-
+# List information about the Design and Flow
 ifeq ($(findstring $(MAKECMDGOALS),clean),)
 $(info Target CPU: $(TOP))
 $(info Running $(FLOW) Flow)
 endif
-
 
 # Clean
 .PHONY: clean

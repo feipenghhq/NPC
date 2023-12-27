@@ -6,12 +6,12 @@
  * Date Created: 12/19/2023
  *
  * ------------------------------------------------------------------------------------------------
- *  Core_sTop class: Provide environment for Core_s CPU design
+ *  Core_s class: Provide environment for Core_s CPU design
  * ------------------------------------------------------------------------------------------------
  */
 
-#ifndef __CORES_ENV_H__
-#define __CORES_ENV_H__
+#ifndef __CORE_S_H__
+#define __CORE_S_H__
 
 #include <verilated.h>
 #include <verilated_vcd_c.h>
@@ -19,18 +19,17 @@
 #include "Vcore_s_core_s.h"
 #include "Vcore_s_RegFile.h"
 #include "Vcore_s__Dpi.h"
-#include "common.h"
-#include "Top.h"
+#include "Dut.h"
 
-class Core_sTop: public Top {
+class Core_s: public Dut {
 
 private:
     Vcore_s *top;
-    const int reset_cycle = 10;
+    int reset_cycle = 10;
 
 public:
-    Core_sTop(int argc, char *argv[], const test_info_s *test_info);
-    ~Core_sTop();
+    Core_s(int argc, char *argv[], const test_info *info);
+    ~Core_s();
 
     virtual void init_trace(const char *name, int level);
     virtual void reset();

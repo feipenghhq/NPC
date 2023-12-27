@@ -9,13 +9,11 @@
 # path
 RTL_PATH = src/rtl
 
-# verilog source file
-V_SRCS-CORE_S += $(wildcard $(RTL_PATH)/core_s/*.sv $(RTL_PATH)/core_s/*.v)
-
-# verilog include directory
-V_INCS += $(RTL_PATH)/include
-
+# Verilog source file
 ifeq ($(CPU),CORE_S)
-V_SRCS += $(V_SRCS-CORE_S)
+VERILOG_SRCS += $(wildcard $(RTL_PATH)/core_s/*.sv $(RTL_PATH)/core_s/*.v)
 endif
+
+# Verilog include directory
+VERILOG_INCS += $(RTL_PATH)/include
 

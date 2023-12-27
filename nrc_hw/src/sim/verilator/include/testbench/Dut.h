@@ -6,49 +6,45 @@
  * Date Created: 12/19/2023
  *
  * ------------------------------------------------------------------------------------------------
- *  Top class: Provide environment for different CPU design
+ *  Dut class: Provide environment for different CPU design
  *  - Provide API to access the design internal signal and data
  *  - Provide API to common simulation task
  *  - Provide basic simulation flow
  * ------------------------------------------------------------------------------------------------
  */
 
-#ifndef __CPUENV_H__
-#define __CPUENV_H__
+#ifndef __DUT_H__
+#define __DUT_H__
 
 #include <verilated.h>
 #include <verilated_vcd_c.h>
 #include "common.h"
 
-class Top {
+class Dut {
 
 public:
     VerilatedVcdC *m_trace;     // Waveform trace
     vluint64_t sim_time;        // simulation time
-    const test_info_s *test_info;
+    const test_info *info;
     bool finished;
     bool success;
 
-    Top(int argc, char *argv[], const test_info_s *test_info);
-    ~Top();
+    Dut(int argc, char *argv[], const test_info *info);
+    ~Dut();
 
     virtual void init_trace(const char *name, int level)=0;
     void dump();
 
+    // common simulation task
     virtual void reset()=0;
     virtual void clk_tick()=0;
     virtual bool run(int step)=0;
     virtual bool report();
 
+    // register access function
     virtual word_t reg_str2val(const char *s);
     virtual word_t reg_id2val(int id)=0;
 };
-
-inline void Top::dump() {
-    if (m_trace) {
-        m_trace->dump(sim_time);
-    }
-}
 
 #endif
 
