@@ -12,9 +12,13 @@
 
 module EXU #(
     parameter XLEN    = 32,
-    parameter ALUOP_W = 4
+    parameter ALUOP_W = 4,
+    parameter BXXOP_W = 3,
+    parameter MEMOP_W = 3
 ) (
     input  logic [ALUOP_W-1:0] alu_opcode,
+    input  logic [BXXOP_W-1:0] bxx_opcode,
+    input  logic [MEMOP_W-1:0] mem_opcode,
     input  logic               alu_src1_sel_rs1,
     input  logic               alu_src1_sel_pc,
     input  logic               alu_src1_sel_0,
@@ -39,12 +43,20 @@ module EXU #(
     logic [XLEN-1:0]    alu_src2;
     logic [XLEN-1:0]    alu_result;
     logic [XLEN-1:0]    pc_plus4;
+    logic               beu_result;
 
     // -------------------------------------------
     // Branch and Jump logic
     // -------------------------------------------
 
-    assign pc_branch = jump;
+    BEU #(.BXXOP_W(BXXOP_W), .XLEN(XLEN))
+    u_BEU (
+        .bxx_opcode(bxx_opcode),
+        .src1(alu_src1),
+        .src2(alu_src2),
+        .result(beu_result));
+
+    assign pc_branch = jump | bxx & beu_result;
     assign target_pc = alu_result; // target pc is calculated by ALU
 
     // -------------------------------------------

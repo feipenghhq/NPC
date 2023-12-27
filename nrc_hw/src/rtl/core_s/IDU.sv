@@ -182,9 +182,9 @@ module IDU #(
     // ALU/BRANCH/MEM Opcode is the same as Funct3
     assign dec_bxx_opcode = rv32i_funct3;
     assign dec_mem_opcode = rv32i_funct3;
-    // ALU opcode is ADD for jal/jalr
+    // ALU opcode is ADD for jal/jalr/bxx
     // For I/R type instruction, inst[30] is used to distinguish between ADD/SUB, SRL/SRA
-    assign dec_alu_opcode[3:0] = dec_jump ? {1'b0, `RV32I_FUNCT3_ADD} : {inst[30], rv32i_funct3};
+    assign dec_alu_opcode[3:0] = (dec_jump || dec_bxx) ? {1'b0, `RV32I_FUNCT3_ADD} : {inst[30], rv32i_funct3};
 
     // Memory read/write
     assign dec_mem_read  = is_load;

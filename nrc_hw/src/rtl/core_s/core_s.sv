@@ -104,9 +104,13 @@ module core_s #(
     // EXU
     EXU #(
         .XLEN(XLEN),
-        .ALUOP_W(ALUOP_W))
+        .ALUOP_W(ALUOP_W),
+        .BXXOP_W(BXXOP_W),
+        .MEMOP_W(MEMOP_W))
     u_EXU (
         .alu_opcode(dec_alu_opcode),
+        .bxx_opcode(dec_bxx_opcode),
+        .mem_opcode(dec_mem_opcode),
         .alu_src1_sel_rs1(dec_alu_src1_sel_rs1),
         .alu_src1_sel_pc(dec_alu_src1_sel_pc),
         .alu_src1_sel_0(dec_alu_src1_sel_0),
