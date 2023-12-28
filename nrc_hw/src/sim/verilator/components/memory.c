@@ -61,3 +61,6 @@ void pmem_write(word_t addr, word_t data, char strb) {
 #endif
 }
 
+byte_t *mem_ptr() {
+    return mem;
+}

@@ -19,7 +19,11 @@
 // Function prototype, global variable
 // ------------------------------------
 
-static test_info info;
+static test_info info = {
+    .trace=false,
+    .elf=NULL,
+    .ref=NULL,
+};
 
 // File pointer for log
 char itrace_log[] = "itrace.log";
@@ -42,11 +46,12 @@ static void print_usage(const char *prog) {
     printf("Usage: \n\t%s args [options]\n\n", prog);
     printf("REQUIRED ARGS\n\n");
     printf("\t-i,--image IMAGE      Binary Image file for the program\n");
-    printf("\t-e,--elf ELF          ELF file for the program\n");
     printf("\t-s,--suite SUITE      Test Suite\n");
     printf("\t-t,--test TEST        Test Name\n");
     printf("\t-d,--dut DUT          DUT Top module name\n");
-    printf("\t-w,--wave             Dump the waveform trace\n");
+    printf("\t--wave                Dump the waveform trace\n");
+    printf("\t--elf ELF             ELF file for the program\n");
+    printf("\t--ref REF_SO          Reference for diff test\n");
     printf("\n");
 }
 
@@ -63,10 +68,9 @@ static void print_usage(const char *prog) {
 static void check_args(const char *prog) {
     bool err = false;
     check_arg(info.image, "image", err);
-    check_arg(info.elf, "elf", err);
     check_arg(info.suite, "suite", err);
-    check_arg(info.test, "test", err);
-    check_arg(info.dut, "dut", err);
+    check_arg(info.test,  "test",  err);
+    check_arg(info.dut,   "dut",   err);
     if (err) {
         printf("\n");
         print_usage(prog);
@@ -80,24 +84,26 @@ static void check_args(const char *prog) {
 int parse_args(int argc, char *argv[]) {
     const struct option long_options[] = {
         {"image", required_argument, 0, 'i'},
-        {"elf",   required_argument, 0, 'e'},
         {"suite", required_argument, 0, 's'},
         {"test",  required_argument, 0, 't'},
         {"dut",   required_argument, 0, 'd'},
-        {"wave",  no_argument      , 0, 'w'},
+        {"wave",  no_argument      , 0, '0'},
+        {"elf",   required_argument, 0, '1'},
+        {"ref",   required_argument, 0, '2'},
         // Add more option here if needed
         {0      , 0                , 0,  0 },
     };
-    const char *optstring = "i:e:s:t:w";
+    const char *optstring = "i:s:t:d:";
     int c = -1; // assign c to -1 so if argc < 2 switch will go to default
     while(argc < 2 || (c = getopt_long(argc, argv, optstring, long_options, NULL)) != -1) {
         switch(c) {
             case 'i': info.image = optarg; break;
-            case 'e': info.elf = optarg; break;
             case 's': info.suite = optarg; break;
             case 't': info.test = optarg; break;
             case 'd': info.dut = optarg; break;
-            case 'w': info.trace = true; break;
+            case '0': info.trace = true; break;
+            case '1': info.elf = optarg; break;
+            case '2': info.ref = optarg; break;
             default:
                 print_usage(argv[0]);
                 exit(0);
@@ -154,12 +160,16 @@ int tb_exec(int argc, char *argv[]) {
 
     parse_args(argc, argv);
     Dut *dut = select_dut(argc, argv, &info);
-    load_image(info.image);
+    size_t mem_size = load_image(info.image);
     init_log();
 
 #ifdef CONFIG_FTRACE
     void init_ftrace(const char *elf);
     init_ftrace(info.elf);
+#endif
+#ifdef CONFIG_DIFFTEST
+    void init_difftest(char *ref, size_t mem_size);
+    init_difftest(info.ref, mem_size);
 #endif
 
     dut->init_trace("waveform.vcd", 99);

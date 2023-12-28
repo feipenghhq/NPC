@@ -1,0 +1,3 @@
+Building shared lib from NJU nemu
+1. Need to disable "Enable address sanitizer" in menuconfig. This will create issue in verilator
+2. Need to add CFLAGS -lreadline when generating shared lib. Otherwise, we will get error in dlopen: "undefined symbol: readline"

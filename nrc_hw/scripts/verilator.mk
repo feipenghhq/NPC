@@ -25,6 +25,7 @@ VERILATOR_FLAGS += --trace
 
 ### CFLAGS for g++ build
 CFLAGS += -CFLAGS -mcmodel=large
+CFLAGS += -CFLAGS -lreadline
 
 ### Verilator trace
 WAVE	 ?= 0
@@ -70,6 +71,7 @@ TB_SRCS   += $(addprefix -CFLAGS -I, $(abspath $(C_INCS)))
 OBJECT = V$(TOP)
 VPASS = $(OUTPUT_DIR)/.VPASS
 BPASS = $(OUTPUT_DIR)/.BPASS
+REF_SO = $(VERILATOR_PATH)/lib/riscv32-nemu-interpreter-so
 
 ### Build the Verilator executable
 build: $(OBJECT)
@@ -112,6 +114,7 @@ define run_sim
 	$(info --> Running Test)
 	@/bin/echo -e "run:\n\t@cd $(OUTPUT_DIR) && ./$(OBJECT) \
 		--image $(1) --elf $(2) --suite $(3) --test $(4) --dut $(5) $(ARG_WAVE)" \
+		--ref $(REF_SO) \
 		>> $(OUTPUT_DIR)/makefile.$(3)
 	@if make -s -f $(OUTPUT_DIR)/makefile.$(3); then \
 		printf "[%$(TEST_NAME_MAX_LEN)s] $(COLOR_GREEN)%s!$(COLOR_NONE)\n" $(3) PASS >> $(RESULT); \

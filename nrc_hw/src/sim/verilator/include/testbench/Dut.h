@@ -26,6 +26,7 @@ class Dut {
 public:
     VerilatedVcdC *m_trace;     // Waveform trace
     vluint64_t sim_time;        // simulation time
+    word_t regs[NUM_REG];
     const test_info *info;
     bool finished;
     bool success;
@@ -45,6 +46,7 @@ public:
     // register access function
     virtual word_t reg_str2val(const char *s);
     virtual word_t reg_id2val(int id)=0;
+    void reg_read();
 };
 
 #endif

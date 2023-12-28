@@ -26,3 +26,7 @@ int reg_str2id(const char *s) {
     }
     return -1;
 }
+
+const char *reg_id2str(int id) {
+    return regs[id];
+}

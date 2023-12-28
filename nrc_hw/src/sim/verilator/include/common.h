@@ -36,11 +36,12 @@ typedef uint32_t word_t;
 // test information
 typedef struct test_info {
     char *image;    // test image
-    char *elf;      // test elf file
     char *suite;    // test suite name
     char *test;     // test name
     char *dut;      // rtl top level
     bool trace;     // dump the waveform
+    char *elf;      // test elf file
+    char *ref;      // Reference for difftest
 } test_info;
 
 #endif

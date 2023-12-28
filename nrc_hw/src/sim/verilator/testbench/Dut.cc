@@ -67,3 +67,11 @@ bool Dut::report() {
     return success;
 }
 
+
+void Dut::reg_read() {
+    for (int i = 0; i < NUM_REG; i++) {
+        regs[i] = reg_id2val(i);
+    }
+    regs[0] = 0;
+}
+
