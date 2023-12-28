@@ -24,17 +24,23 @@ module IFU #(
     output logic [XLEN-1:0]     pc
 );
 
+    logic [XLEN-1:0] next_pc/*verilator public*/;
+
+    always @(*) begin
+        if (pc_branch) begin
+            next_pc = target_pc;
+        end
+        else begin
+            next_pc = pc + 4;
+        end
+    end
+
     always @(posedge clk) begin
         if (!rst_b) begin
             pc <= PC_RST_VEC;
         end
         else begin
-            if (pc_branch) begin
-                pc <= target_pc;
-            end
-            else begin
-                pc <= pc + 4;
-            end
+            pc <= next_pc;
         end
     end
 

@@ -21,7 +21,6 @@
 // ---------------------------------------------
 
 bool dpi_ebreak;
-void itrace_write(word_t pc, word_t inst);
 
 // ---------------------------------------------
 // Class functions
@@ -68,7 +67,12 @@ bool Core_s::run(int step) {
     int cnt = 0;
     while(!finished && ((step < 0 && sim_time < MAX_SIM_TIME)  || cnt < step)) {
     #ifdef CONFIG_ITRACE
+        void itrace_write(word_t pc, word_t inst);
         itrace_write(top->pc, top->core_s->inst);
+    #endif
+    #ifdef CONFIG_FTRACE
+        void ftrace_write(word_t pc, word_t nxtpc, word_t inst);
+        ftrace_write(top->pc, top->core_s->u_IFU->next_pc, top->core_s->inst);
     #endif
         clk_tick();
         clk_tick();

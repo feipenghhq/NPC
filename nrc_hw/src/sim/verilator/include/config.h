@@ -23,4 +23,6 @@
 
 #define CONFIG_MTRACE
 
+#define CONFIG_FTRACE
+
 #endif

@@ -107,11 +107,11 @@ RESULT = $(OUTPUT_DIR)/.result
 $(shell mkdir -p $(OUTPUT_DIR))
 $(shell > $(RESULT))
 
-### Define function to run simulation. Usage: $(call run_sim,image,suite,test,dut)
+### Define function to run simulation. Usage: $(call run_sim,image,elf,suite,test,dut)
 define run_sim
 	$(info --> Running Test)
 	@/bin/echo -e "run:\n\t@cd $(OUTPUT_DIR) && ./$(OBJECT) \
-		--image $(1) --suite $(2) --test $(3) --dut $(4) $(ARG_WAVE)" \
+		--image $(1) --elf $(2) --suite $(3) --test $(4) --dut $(5) $(ARG_WAVE)" \
 		>> $(OUTPUT_DIR)/makefile.$(3)
 	@if make -s -f $(OUTPUT_DIR)/makefile.$(3); then \
 		printf "[%$(TEST_NAME_MAX_LEN)s] $(COLOR_GREEN)%s!$(COLOR_NONE)\n" $(3) PASS >> $(RESULT); \

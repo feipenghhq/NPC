@@ -26,5 +26,5 @@ ics_am_cpu_tests: $(ICS_AM_CPU_TESTS)
 	@cat $(RESULT)
 
 $(ICS_AM_CPU_TESTS): $(OBJECT) $(RESULT)
-	$(call run_sim,$(IMAGE_PATH)/$@.bin,$(TEST_SUITES),$@,$(TOP))
+	$(call run_sim,$(IMAGE_PATH)/$@.bin,$(IMAGE_PATH)/$@.elf,$(TEST_SUITES),$@,$(TOP))
 

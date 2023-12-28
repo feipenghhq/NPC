@@ -18,6 +18,7 @@
 #include "Vcore_s.h"
 #include "Vcore_s_core_s.h"
 #include "Vcore_s_RegFile.h"
+#include "Vcore_s_IFU__P80000000.h"
 #include "Vcore_s__Dpi.h"
 #include "Dut.h"
 
