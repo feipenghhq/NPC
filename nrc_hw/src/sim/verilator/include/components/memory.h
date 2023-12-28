@@ -17,7 +17,7 @@
 
 size_t load_image(const char *img);
 
-word_t pmem_read(word_t addr);
+word_t pmem_read(word_t addr, bool ifetch);
 
 void pmem_write(word_t addr, word_t data, char strb);
 

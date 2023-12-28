@@ -15,6 +15,7 @@
 #include "config.h"
 #include <stdio.h>
 
+extern FILE *mtrace_fp;
 // assign the memory into stack
 static byte_t mem[MSIZE];
 
@@ -38,9 +39,13 @@ size_t load_image(const char *img) {
     return size;
 }
 
-word_t pmem_read(word_t addr) {
+word_t pmem_read(word_t addr, bool ifetch) {
     uintptr_t offset = addr - MEM_OFFSET;
     uintptr_t paddr = (uintptr_t) mem + offset;
+#ifdef CONFIG_MTRACE
+    if (ifetch)  fprintf(mtrace_fp, "Fetch: @0x%x\n", addr);
+    if (!ifetch) fprintf(mtrace_fp, " Read: @0x%x\n", addr);
+#endif
     return *((word_t *) paddr);
 }
 
@@ -51,5 +56,8 @@ void pmem_write(word_t addr, word_t data, char strb) {
     for (int i = 0; i < 3; i++) {
         if (strb & (0x1 << i)) *(((byte_t *) paddr) + i) = (byte_t) (strb >> (8*i));
     }
+#ifdef CONFIG_MTRACE
+    fprintf(mtrace_fp, "Write: @0x%x\n", addr);
+#endif
 }
 

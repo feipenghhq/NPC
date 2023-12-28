@@ -17,4 +17,10 @@
 #define MEM_OFFSET      0x80000000
 #define MSIZE           0x80000000
 
+#define CONFIG_ITRACE
+#define CONFIG_IRINGBUF_SIZE 128
+#define CONFIG_IRINGBUF_LEN  8
+
+#define CONFIG_MTRACE
+
 #endif

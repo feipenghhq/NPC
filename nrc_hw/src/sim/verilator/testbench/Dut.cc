@@ -20,6 +20,7 @@
 // ---------------------------------------------
 
 int reg_str2id(const char *);
+void itrace_print();
 
 // ---------------------------------------------
 // Class functions
@@ -58,6 +59,9 @@ bool Dut::report() {
         log_info_color("Test PASS!", ANSI_FG_GREEN);
     }
     else {
+    #ifdef CONFIG_ITRACE
+        itrace_print();
+    #endif
         log_err("Test FAIL!");
     }
     return success;

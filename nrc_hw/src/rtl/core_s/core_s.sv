@@ -67,7 +67,7 @@ module core_s #(
     logic [XLEN-1:0]    rd_wdata;
 
     // Memory
-    logic [XLEN-1:0]    inst;       // input instruction
+    logic [XLEN-1:0]    inst/*verilator public*/;       // input instruction
     logic               data_valid; // data memory request
     logic               data_wen;   // data memory write enable
     logic [XLEN-1:0]    data_addr;  // data memory address
@@ -171,7 +171,7 @@ module core_s #(
     `ifdef VERILATOR
 
         import "DPI-C" function void dpi_set_ebreak();
-        import "DPI-C" function void dpi_pmem_read(input int addr, output int rdata);
+        import "DPI-C" function void dpi_pmem_read(input int addr, output int rdata, input bit ifetch);
         import "DPI-C" function void dpi_pmem_write(input int addr, input int data, input byte strb);
 
         // set ebreak
@@ -183,13 +183,15 @@ module core_s #(
 
         // fetch instruction
         always @(*) begin
-            dpi_pmem_read(pc, inst);
+            dpi_pmem_read(pc, inst, 1'b1);
         end
 
         // data memory access
-        always @(*) begin
+        always @(data_valid or data_wen or data_addr or data_wdata) begin
             if (data_valid) begin
-                dpi_pmem_read(data_addr, data_rdata);
+                if (!data_wen) begin
+                    dpi_pmem_read(data_addr, data_rdata, 1'b0);
+                end
                 if (data_wen) begin
                     dpi_pmem_write(data_addr, data_wdata, {4'b0, data_wstrb});
                 end

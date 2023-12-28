@@ -12,13 +12,24 @@
 #include "memory.h"
 #include "common.h"
 #include "tb.h"
+#include "config.h"
 #include <getopt.h>
 
 // ------------------------------------
 // Function prototype, global variable
 // ------------------------------------
 
+
 static test_info info;
+
+// File pointer for log
+char itrace_log[] = "itrace.log";
+char mtrace_log[] = "mtrace.log";
+char ftrace_log[] = "ftrace.log";
+
+FILE *itrace_fp = NULL;
+FILE *mtrace_fp = NULL;
+FILE *ftrace_fp = NULL;
 
 // ------------------------------------
 // Functions
@@ -92,6 +103,25 @@ int parse_args(int argc, char *argv[]) {
     return 0;
 }
 
+/**
+ * Initialize the log files
+ */
+static void init_log() {
+#ifdef CONFIG_ITRACE
+    itrace_fp = fopen(itrace_log, "w");
+    Check(itrace_fp, "Failed to open %s", itrace_log);
+#endif
+#ifdef CONFIG_MTRACE
+    mtrace_fp = fopen(mtrace_log, "w");
+    Check(mtrace_fp, "Failed to open %s", mtrace_log);
+#endif
+}
+
+static void close_log() {
+    if (itrace_fp) fclose(itrace_fp);
+    if (mtrace_fp) fclose(mtrace_fp);
+}
+
 
 /**
  * Select and create different top based on the DUT
@@ -112,14 +142,18 @@ static Dut *select_dut(int argc, char *argv[], test_info *info) {
  */
 
 int tb_exec(int argc, char *argv[]) {
+
     parse_args(argc, argv);
     Dut *dut = select_dut(argc, argv, &info);
     load_image(info.image);
+    init_log();
 
     dut->init_trace("waveform.vcd", 99);
     dut->reset();
     dut->run(-1); // run till the end of the test
     bool success = dut->report();
+
+    close_log();
     delete dut;
     return success;
 }

@@ -21,6 +21,7 @@
 // ---------------------------------------------
 
 bool dpi_ebreak;
+void itrace_write(word_t pc, word_t inst);
 
 // ---------------------------------------------
 // Class functions
@@ -66,6 +67,9 @@ void Core_s::reset() {
 bool Core_s::run(int step) {
     int cnt = 0;
     while(!finished && ((step < 0 && sim_time < MAX_SIM_TIME)  || cnt < step)) {
+    #ifdef CONFIG_ITRACE
+        itrace_write(top->pc, top->core_s->inst);
+    #endif
         clk_tick();
         clk_tick();
         cnt++;
@@ -90,8 +94,8 @@ extern "C" void dpi_set_ebreak() {
     dpi_ebreak = true;
 }
 
-extern "C" void dpi_pmem_read(int addr, int *rdata) {
-    *rdata = pmem_read(addr);
+extern "C" void dpi_pmem_read(int addr, int *rdata, svBit ifetch) {
+    *rdata = pmem_read(addr, ifetch);
 }
 
 extern "C" void dpi_pmem_write(int addr, int data, char strb) {
