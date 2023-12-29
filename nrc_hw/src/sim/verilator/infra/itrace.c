@@ -22,19 +22,19 @@ extern FILE *itrace_fp;
 
 static void iringbuf_write(char *str);
 static void iringbuf_print();
+char *disasm(word_t *inst, word_t pc);
 
 // ----------------------------------------------
 // Instruction Trace
 // ----------------------------------------------
 
-#define MSG_LEN 48
+#define MSG_LEN  128
+#define INST_LEN 33
 
 void itrace_write(word_t pc, word_t inst) {
     char msg[MSG_LEN];
-    sprintf(msg, "0x%08x: 0x%08x", pc, inst);
-#ifdef CONFIG_ITRACE
+    sprintf(msg, "0x%08x: 0x%08x%s", pc, inst, disasm(&inst, pc));
     fprintf(itrace_fp, "%s\n", msg);
-#endif
     iringbuf_write(msg);
 }
 
@@ -74,8 +74,8 @@ static void iringbuf_print() {
     int start = iringbuf.end;
     iringbuf_inc_wrap(start);
     fprintf(stderr, "Instruction sequence to error instruction (Dump from iringbuf):\n");
-    fprintf(stderr, "     PC          Instruction\n");
-    fprintf(stderr, "     ----------- -----------\n");
+    fprintf(stderr, "     PC          MCode          Instruction\n");
+    fprintf(stderr, "     ----------- ----------     -----------\n");
     for (; start < CONFIG_IRINGBUF_LEN; start++)
         if (iringbuf.vld[start]) fprintf(stderr, "     %s\n", iringbuf.buf[start]);
 
@@ -85,6 +85,7 @@ static void iringbuf_print() {
     fprintf(stderr, "---> %s\n", iringbuf.buf[iringbuf.end]);
 }
 
+#undef INST_LEN
 #undef MSG_LEN
 
 #endif

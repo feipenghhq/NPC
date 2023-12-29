@@ -162,7 +162,10 @@ int tb_exec(int argc, char *argv[]) {
     Dut *dut = select_dut(argc, argv, &info);
     size_t mem_size = load_image(info.image);
     init_log();
-
+#ifdef CONFIG_ITRACE
+    void init_disasm();
+    init_disasm();
+#endif
 #ifdef CONFIG_FTRACE
     void init_ftrace(const char *elf);
     init_ftrace(info.elf);

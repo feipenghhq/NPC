@@ -23,9 +23,16 @@ VERILATOR_FLAGS += --cc --exe -j 0
 VERILATOR_FLAGS += --Mdir $(OUTPUT_DIR) --top-module $(TOP)
 VERILATOR_FLAGS += --trace
 
-### CFLAGS for g++ build
+### CFLAGS for g++ build in verilator
 CFLAGS += -CFLAGS -mcmodel=large
+#### for difftest nemu shared lib
 CFLAGS += -CFLAGS -lreadline
+#### for LLVM disasm
+CFLAGS += $(addprefix -CFLAGS ,$(shell llvm-config --cflags))
+
+### LDFLAGS for g++ build in verilator
+#### for LLVM disasm
+LDFLAGS += $(addprefix -LDFLAGS ,$(shell llvm-config --ldflags --libs))
 
 ### Verilator trace
 WAVE	 ?= 0
@@ -88,7 +95,7 @@ compile: $(VPASS)
 $(VPASS): $(VERILOG_SRCS) $(C_SRCS) $(CXX_SRCS)
 	$(info --> Verilatring)
 	@mkdir -p $(BUILD_DIR)
-	@verilator $(VERILATOR_FLAGS) $(CFLAGS) $(RTL_SRCS) $(TB_SRCS) && touch $@
+	@verilator $(VERILATOR_FLAGS) $(CFLAGS) $(LDFLAGS) $(RTL_SRCS) $(TB_SRCS) && touch $@
 
 ### Lint the RTL
 lint: $(VERILOG_SRCS)
