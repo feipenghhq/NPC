@@ -79,10 +79,11 @@ static void iringbuf_print() {
     for (; start < CONFIG_IRINGBUF_LEN; start++)
         if (iringbuf.vld[start]) fprintf(stderr, "     %s\n", iringbuf.buf[start]);
 
-    for (start = 0; start < iringbuf.end - 1; start++)
+    for (start = 0; start < iringbuf.end; start++)
         if (iringbuf.vld[start]) fprintf(stderr, "     %s\n", iringbuf.buf[start]);
 
     fprintf(stderr, "---> %s\n", iringbuf.buf[iringbuf.end]);
+    fprintf(stderr, "\n");
 }
 
 #undef INST_LEN

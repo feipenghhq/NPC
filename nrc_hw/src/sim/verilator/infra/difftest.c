@@ -70,8 +70,8 @@ bool difftest_compare(word_t *dut_reg) {
     difftest_regcpy(ref_reg, DIFFTEST_TO_DUT);
     for (int i = 0; i < NUM_REG; i++) {
       if (ref_reg[i] != dut_reg[i]) {
-        log_err("difftest: Register Value mismatch on reg %s.\nRef: 0x%08x. Dut: 0x%08x",
-          reg_id2str(i), ref_reg[i], dut_reg[i]);
+        log_err("difftest: Register Value mismatch on reg %s ($%d).\nRef: 0x%08x. Dut: 0x%08x",
+          reg_id2str(i), i, ref_reg[i], dut_reg[i]);
         pass = false;
       }
     }

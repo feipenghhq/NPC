@@ -11,7 +11,6 @@
 #include "testbench/Core_s.h"
 #include "memory.h"
 #include "common.h"
-#include "tb.h"
 #include "config.h"
 #include <getopt.h>
 

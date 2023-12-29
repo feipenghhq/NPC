@@ -29,7 +29,7 @@ public:
     word_t regs[NUM_REG];
     const test_info *info;
     bool finished;
-    bool success;
+    bool pass;
 
     Dut(int argc, char *argv[], const test_info *info);
     ~Dut();
@@ -40,13 +40,17 @@ public:
     // common simulation task
     virtual void reset()=0;
     virtual void clk_tick()=0;
-    virtual bool run(int step)=0;
+    virtual bool run(uint64_t step)=0;
+    virtual void trace(word_t pc, word_t nxtpc, word_t inst);
+    virtual void difftest();
+    virtual void check();
     virtual bool report();
 
     // register access function
     virtual word_t reg_str2val(const char *s);
     virtual word_t reg_id2val(int id)=0;
-    void reg_read();
+    void read_reg();
+    void report_reg();
 };
 
 #endif

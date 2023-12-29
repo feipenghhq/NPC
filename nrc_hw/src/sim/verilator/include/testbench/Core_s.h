@@ -35,7 +35,7 @@ public:
     virtual void init_trace(const char *name, int level);
     virtual void reset();
     virtual void clk_tick();
-    virtual bool run(int step);
+    virtual bool run(uint64_t step);
     virtual word_t reg_id2val(int id);
 };
 

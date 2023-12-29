@@ -119,15 +119,15 @@ $(shell > $(RESULT))
 ### Define function to run simulation. Usage: $(call run_sim,image,elf,suite,test,dut)
 define run_sim
 	$(info --> Running Test)
-	@/bin/echo -e "run:\n\t@cd $(OUTPUT_DIR) && ./$(OBJECT) \
+	@/bin/echo -e "run:\n\t $(OUTPUT_DIR)/$(OBJECT) \
 		--image $(1) --elf $(2) --suite $(3) --test $(4) --dut $(5) $(ARG_WAVE)" \
 		--ref $(REF_SO) \
-		>> $(OUTPUT_DIR)/makefile.$(3)
-	@if make -s -f $(OUTPUT_DIR)/makefile.$(3); then \
-		printf "[%$(TEST_NAME_MAX_LEN)s] $(COLOR_GREEN)%s!$(COLOR_NONE)\n" $(3) PASS >> $(RESULT); \
+		>> $(OUTPUT_DIR)/makefile.$(4)
+	@if make -s -f $(OUTPUT_DIR)/makefile.$(4); then \
+		printf "[%$(TEST_NAME_MAX_LEN)s] $(COLOR_GREEN)%s!$(COLOR_NONE)\n" $(4) PASS >> $(RESULT); \
 	else \
-		printf "[%$(TEST_NAME_MAX_LEN)s] $(COLOR_RED)%s!$(COLOR_NONE)\n" $(3) FAIL >> $(RESULT); \
+		printf "[%$(TEST_NAME_MAX_LEN)s] $(COLOR_RED)%s!$(COLOR_NONE)\n" $(4) FAIL >> $(RESULT); \
 	fi
-	-@rm $(OUTPUT_DIR)/makefile.$(3)
+	-@rm $(OUTPUT_DIR)/makefile.$(4)
 endef
 

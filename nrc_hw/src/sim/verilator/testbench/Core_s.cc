@@ -12,7 +12,6 @@
 
 #include "Core_s.h"
 #include "memory.h"
-#include "tb.h"
 
 #define MAX_SIM_TIME 10000
 
@@ -63,38 +62,18 @@ void Core_s::reset() {
     assert(top->clk == 1); // we want to change data on negedge
 }
 
-bool Core_s::run(int step) {
+bool Core_s::run(uint64_t step) {
     int cnt = 0;
-    bool diffresult;
     while(!finished && ((step < 0 && sim_time < MAX_SIM_TIME)  || cnt < step)) {
         clk_tick();
+        // trace need to be put here because the next_pc is updated at this point
+        // while the change has not been committed yet
+        trace(top->pc, top->core_s->u_IFU->next_pc, top->core_s->inst);
         clk_tick();
-    #ifdef CONFIG_ITRACE
-        void itrace_write(word_t pc, word_t inst);
-        itrace_write(top->pc, top->core_s->inst);
-    #endif
-    #ifdef CONFIG_FTRACE
-        void ftrace_write(word_t pc, word_t nxtpc, word_t inst);
-        ftrace_write(top->pc, top->core_s->u_IFU->next_pc, top->core_s->inst);
-    #endif
-    #ifdef CONFIG_DIFFTEST
-        void ref_exec(uint64_t n);
-        bool difftest_compare(word_t *dut_reg);
-        ref_exec(1);
-        reg_read();
-        diffresult = difftest_compare(regs);
-        if (!diffresult) {
-            success = false;
-            finished = true;
-            return finished;
-        }
-    #endif
+        // diff test need to be put here as the change has been committed at this point
+        difftest();
         cnt++;
-        finished = check_finish(this, info->suite);
-        if (finished) {
-            success = check_pass(this, info->suite);
-            return finished;
-        }
+        check();
     }
     return finished;
 }

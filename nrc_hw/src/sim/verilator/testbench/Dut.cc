@@ -20,7 +20,10 @@
 // ---------------------------------------------
 
 int reg_str2id(const char *);
+const char *reg_id2str(int id);
 void itrace_print();
+bool check_finish(Dut *top, const char *suite);
+bool check_pass(Dut *top, const char *suite);
 
 // ---------------------------------------------
 // Class functions
@@ -32,7 +35,7 @@ Dut::Dut(int argc, char *argv[], const test_info *info) {
     sim_time = 0;
     m_trace = NULL;
     finished = false;
-    success = false;
+    pass = false;
 }
 
 Dut::~Dut() {
@@ -53,25 +56,72 @@ void Dut::dump() {
     }
 }
 
+void Dut::check() {
+    // only checks if test is not finished.
+    // test might be terminated by difftest if there are errors
+    if (!finished) {
+        finished = check_finish(this, info->suite);
+        if (finished) {
+            pass = check_pass(this, info->suite);
+        }
+    }
+}
+
 bool Dut::report() {
     log_info("Test finished at %ld cycle.", sim_time);
-    if (success) {
+    if (pass) {
         log_info_color("Test PASS!", ANSI_FG_GREEN);
     }
     else {
     #ifdef CONFIG_ITRACE
         itrace_print();
     #endif
+        report_reg();
         log_err("Test FAIL!");
     }
-    return success;
+    return pass;
 }
 
 
-void Dut::reg_read() {
+void Dut::read_reg() {
     for (int i = 0; i < NUM_REG; i++) {
         regs[i] = reg_id2val(i);
     }
     regs[0] = 0;
 }
 
+void Dut::report_reg() {
+    fprintf(stderr, "Dump register value\n");
+    fprintf(stderr, "     Reg      Value\n");
+    fprintf(stderr, "     -------- ----------\n");
+    for (int i = 1; i < NUM_REG; i++) {
+        fprintf(stderr, "    %3s (%2d): 0x%08x\n", reg_id2str(i), i, reg_id2val(i));
+        regs[i] = reg_id2val(i);
+    }
+}
+
+void Dut::trace(word_t pc, word_t nxtpc, word_t inst) {
+#ifdef CONFIG_ITRACE
+    void itrace_write(word_t pc, word_t inst);
+    itrace_write(pc, inst);
+#endif
+#ifdef CONFIG_FTRACE
+    void ftrace_write(word_t pc, word_t nxtpc, word_t inst);
+    ftrace_write(pc, nxtpc, inst);
+#endif
+}
+
+
+void Dut::difftest() {
+#ifdef CONFIG_DIFFTEST
+    void ref_exec(uint64_t n);
+    bool difftest_compare(word_t *dut_reg);
+    ref_exec(1);
+    read_reg();
+    bool diffresult = difftest_compare(regs);
+    if (!diffresult) {
+        pass = false;
+        finished = true;
+    }
+#endif
+}
