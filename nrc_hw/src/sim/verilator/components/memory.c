@@ -39,6 +39,12 @@ size_t load_image(const char *img) {
     return size;
 }
 
+// FIXME: Need to make the addr word boundary aligned
+// FIXME: add a macro for # of byte
+
+/**
+ * read memory. always read word_t size
+ */
 word_t pmem_read(word_t addr, bool ifetch) {
     uintptr_t offset = addr - MEM_OFFSET;
     uintptr_t paddr = (uintptr_t) mem + offset;
@@ -49,12 +55,17 @@ word_t pmem_read(word_t addr, bool ifetch) {
     return *((word_t *) paddr);
 }
 
+/**
+ * write memory. always write word_t size
+ */
 void pmem_write(word_t addr, word_t data, char strb) {
     uintptr_t offset = addr - MEM_OFFSET;
     uintptr_t paddr = (uintptr_t) mem + offset;
     // only support for 32b data
-    for (int i = 0; i < 3; i++) {
-        if (strb & (0x1 << i)) *(((byte_t *) paddr) + i) = (byte_t) (strb >> (8*i));
+    for (int i = 0; i < 4; i++) {
+        if ((strb & (0x1 << i)) != 0) {
+            *((byte_t *) (paddr + i)) = (byte_t) (data >> (8*i));
+        }
     }
 #ifdef CONFIG_MTRACE
     fprintf(mtrace_fp, "Write: @0x%x\n", addr);

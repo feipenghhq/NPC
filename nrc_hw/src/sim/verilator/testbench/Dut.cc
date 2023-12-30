@@ -91,11 +91,11 @@ void Dut::read_reg() {
 }
 
 void Dut::report_reg() {
-    fprintf(stderr, "Dump register value\n");
-    fprintf(stderr, "     Reg      Value\n");
-    fprintf(stderr, "     -------- ----------\n");
+    Log("Dump register value\n");
+    Log("     Reg      Value\n");
+    Log("     -------- ----------\n");
     for (int i = 1; i < NUM_REG; i++) {
-        fprintf(stderr, "    %3s (%2d): 0x%08x\n", reg_id2str(i), i, reg_id2val(i));
+        Log("    %3s (%2d): 0x%08x\n", reg_id2str(i), i, reg_id2val(i));
         regs[i] = reg_id2val(i);
     }
 }

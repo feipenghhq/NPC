@@ -73,17 +73,17 @@ static void iringbuf_write(char *str) {
 static void iringbuf_print() {
     int start = iringbuf.end;
     iringbuf_inc_wrap(start);
-    fprintf(stderr, "Instruction sequence to error instruction (Dump from iringbuf):\n");
-    fprintf(stderr, "     PC          MCode          Instruction\n");
-    fprintf(stderr, "     ----------- ----------     -----------\n");
+    Log("Instruction sequence to error instruction (Dump from iringbuf):\n");
+    Log("     PC          MCode          Instruction\n");
+    Log("     ----------- ----------     -----------\n");
     for (; start < CONFIG_IRINGBUF_LEN; start++)
-        if (iringbuf.vld[start]) fprintf(stderr, "     %s\n", iringbuf.buf[start]);
+        if (iringbuf.vld[start]) Log("     %s\n", iringbuf.buf[start]);
 
     for (start = 0; start < iringbuf.end; start++)
-        if (iringbuf.vld[start]) fprintf(stderr, "     %s\n", iringbuf.buf[start]);
+        if (iringbuf.vld[start]) Log("     %s\n", iringbuf.buf[start]);
 
-    fprintf(stderr, "---> %s\n", iringbuf.buf[iringbuf.end]);
-    fprintf(stderr, "\n");
+    Log("---> %s\n", iringbuf.buf[iringbuf.end]);
+    Log("\n");
 }
 
 #undef INST_LEN

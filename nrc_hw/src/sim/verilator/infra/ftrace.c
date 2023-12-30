@@ -107,7 +107,7 @@ static void find_func_info(const char *elf) {
 void print_func_info() {
     struct func_info *s = start;
     for (; s != NULL; s = s->next) {
-        printf("[0x%08x, 0x%08x): %s\n", s->start, s->end, s->name);
+        Log("[0x%08x, 0x%08x): %s\n", s->start, s->end, s->name);
     }
 }
 

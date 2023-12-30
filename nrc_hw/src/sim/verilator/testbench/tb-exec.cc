@@ -25,14 +25,15 @@ static test_info info = {
 };
 
 // File pointer for log
-char itrace_log[] = "itrace.log";
-char mtrace_log[] = "mtrace.log";
-char ftrace_log[] = "ftrace.log";
+const char itrace_log[] = "itrace.log";
+const char mtrace_log[] = "mtrace.log";
+const char ftrace_log[] = "ftrace.log";
+const char log_name[]   = "run.log";
 
 FILE *itrace_fp = NULL;
 FILE *mtrace_fp = NULL;
 FILE *ftrace_fp = NULL;
-
+FILE *log_fp = NULL;
 
 // ------------------------------------
 // Functions
@@ -57,7 +58,7 @@ static void print_usage(const char *prog) {
 #define check_arg(arg, name, err) \
     do { \
         if (!(arg)) { \
-            fprintf(stderr, "[ERROR] Missing argument: %s\n", name); \
+            printf("[ERROR] Missing argument: %s\n", name); \
             err = true;} \
     } while(0)
 
@@ -128,12 +129,18 @@ static void init_log() {
     ftrace_fp = fopen(ftrace_log, "w");
     Check(ftrace_fp, "Failed to open %s", ftrace_log);
 #endif
+    log_fp = fopen(log_name, "w");
+    assert(log_fp);
 }
 
 static void close_log() {
     if (itrace_fp) fclose(itrace_fp);
     if (mtrace_fp) fclose(mtrace_fp);
     if (ftrace_fp) fclose(ftrace_fp);
+    if (log_fp) fclose(log_fp);
+    // remove ANSI color coding in log file
+    char cmd[] = "sed -i 's/\x1b\[[0-9;]*m//g' run.log"; // Note: the log name is hard coded here
+    int rc = system(cmd);
 }
 
 
@@ -158,9 +165,9 @@ static Dut *select_dut(int argc, char *argv[], test_info *info) {
 int tb_exec(int argc, char *argv[]) {
 
     parse_args(argc, argv);
+    init_log();
     Dut *dut = select_dut(argc, argv, &info);
     size_t mem_size = load_image(info.image);
-    init_log();
 #ifdef CONFIG_ITRACE
     void init_disasm();
     init_disasm();

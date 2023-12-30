@@ -27,22 +27,41 @@
 
 #define ANSI_FMT(str, fmt) fmt str ANSI_NONE
 
+#define log_write(...) \
+    do { \
+        extern FILE *log_fp; \
+        fprintf(log_fp, __VA_ARGS__); \
+        fflush(log_fp); \
+    } while (0)
+
+#define Log(...) \
+    do { \
+        printf(__VA_ARGS__); \
+        log_write(__VA_ARGS__); \
+    } while (0)
+
 // Reference: <Learn C the hard way> ZED'S AWESOME DEBUG MACROS
 
 #define clean_errno() (errno == 0 ? "None": strerror(errno))
 
-#define log_err(msg, ...) fprintf(stderr, ANSI_FMT("[ERROR] (%s:%d %s: errno: %s) " msg "\n", ANSI_FG_RED), \
-        basename(__FILE__), __LINE__, __func__, clean_errno(), ##__VA_ARGS__)
+#define log_err(msg, ...) \
+    Log(ANSI_FMT("[ERROR] (%s:%d %s: errno: %s) " msg "\n", ANSI_FG_RED), \
+    basename(__FILE__), __LINE__, __func__, clean_errno(), ##__VA_ARGS__)
 
-#define log_warn(msg, ...) fprintf(stderr, ANSI_FMT("[WARN] (%s:%d %s: errno: %s) " msg "\n", ANSI_FG_YELLOW), \
-        basename(__FILE__), __LINE__, __func__, clean_errno(), ##__VA_ARGS__)
+#define log_warn(msg, ...) \
+    Log(ANSI_FMT("[WARN] (%s:%d %s: errno: %s) " msg "\n", ANSI_FG_YELLOW), \
+    basename(__FILE__), __LINE__, __func__, clean_errno(), ##__VA_ARGS__)
 
-#define log_info(msg, ...) fprintf(stderr, ANSI_FMT("[INFO] (%s:%d %s) " msg "\n", ANSI_FG_BLUE), \
-        basename(__FILE__), __LINE__, __func__, ##__VA_ARGS__)
+#define log_info(msg, ...) \
+    Log(ANSI_FMT("[INFO] (%s:%d %s) " msg "\n", ANSI_FG_BLUE), \
+    basename(__FILE__), __LINE__, __func__, ##__VA_ARGS__)
 
-#define log_info_color(msg, color, ...) do {fprintf(stderr, ANSI_FMT("[INFO] (%s:%d %s) ", ANSI_FG_BLUE), \
-        basename(__FILE__), __LINE__, __func__); fprintf(stderr, ANSI_FMT( msg "\n", color), ##__VA_ARGS__);} while(0)
+#define log_info_color(msg, color, ...) \
+    do {Log(ANSI_FMT("[INFO] (%s:%d %s) ", ANSI_FG_BLUE), basename(__FILE__), __LINE__, __func__); \
+        Log(ANSI_FMT( msg "\n", color), ##__VA_ARGS__); \
+    } while(0)
 
-#define Check(cond, msg, ...) do {if(!(cond)) {log_err(msg, ##__VA_ARGS__); errno=0; exit(1);}} while(0)
+#define Check(cond, msg, ...) \
+    do {if(!(cond)) {log_err(msg, ##__VA_ARGS__); errno=0; exit(1);}} while(0)
 
 #endif
