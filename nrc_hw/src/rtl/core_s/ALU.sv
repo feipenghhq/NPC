@@ -91,14 +91,14 @@ module ALU #(
 
     // slt result can be calculated with the following cases
     // 1. src1 < 0 and src2 > 0
-    // 2. src1 and src2 are both positive or negative, and addder result is negative
+    // 2. src1 and src2 are both positive or negative, and adder result is negative
     //    a. both src1/src2 > 0 and src1 - src2 < 0
     //    b. both src1/src2 < 0 and src1 - src2 < 0
     assign alu_slt_result[XLEN-1:1] = '0;
     assign alu_slt_result[0] = (alu_src1[XLEN-1] & ~alu_src2[XLEN-1]) |
                                (~(alu_src1[XLEN-1] ^ alu_src2[XLEN-1])) & alu_adder_result[XLEN-1];
 
-    // for sltu, if there is carry, then src1 is smaller then src2
+    // for sltu, if there is no carry, then src1 is smaller then src2
     assign alu_sltu_result[XLEN-1:1] = '0;
     assign alu_sltu_result[0] = ~alu_adder_cout;
 

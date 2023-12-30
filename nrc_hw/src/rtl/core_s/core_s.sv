@@ -81,7 +81,6 @@ module core_s #(
 
     // Memory control
     assign data_addr = alu_result;
-    assign data_wdata = rs2_rdata;
 
     // Select which source goes to rd
     assign rd_wdata = dec_mem_read ? mem_rd_wdata : exu_rd_wdata;
@@ -159,10 +158,12 @@ module core_s #(
         .mem_read(dec_mem_read),
         .mem_write(dec_mem_write),
         .byte_addr(alu_result[1:0]),
+        .rs2_rdata(rs2_rdata),
         .rd_wdata(mem_rd_wdata),
         .data_valid(data_valid),
         .data_wen(data_wen),
         .data_wstrb(data_wstrb),
+        .data_wdata(data_wdata),
         .data_rdata(data_rdata));
 
     // -------------------------------------------

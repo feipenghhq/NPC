@@ -20,10 +20,12 @@ module MEU #(
     input  logic               mem_read,
     input  logic               mem_write,
     input  logic [1:0]         byte_addr,
+    input  logic [XLEN-1:0]    rs2_rdata,
     output logic [XLEN-1:0]    rd_wdata,
     output logic               data_valid, // data memory request
     output logic               data_wen,   // data memory write enable
     output logic [3:0]         data_wstrb, // data memory write strobe
+    output logic [XLEN-1:0]    data_wdata, // data memory write data
     input  logic [XLEN-1:0]    data_rdata  // data memory read data
 );
 
@@ -66,6 +68,11 @@ module MEU #(
     assign wstrb_half = {byte_addr[1], byte_addr[1], ~byte_addr[1], ~byte_addr[1]} & {4{is_sh}};
     assign wstrb_word = {4{is_sw}};
     assign data_wstrb = wstrb_byte | wstrb_half | wstrb_word;
+
+    // generate write data
+    assign data_wdata = ({XLEN{is_sb}} & {4{rs2_rdata[7:0]}})  |
+                        ({XLEN{is_sh}} & {2{rs2_rdata[15:0]}}) |
+                        ({XLEN{is_sw}} & rs2_rdata);
 
     // process read data
     assign is_lb  = mem_opcode == `RV32I_FUNCT3_LB;

@@ -107,6 +107,7 @@ module IDU #(
 
     // MISC
     logic alu_add;
+    logic is_srx;
 
     // -------------------------------------------
     // Extract Each field from Instruction
@@ -186,11 +187,12 @@ module IDU #(
     assign dec_bxx_opcode = rv32i_funct3;
     assign dec_mem_opcode = rv32i_funct3;
 
-    // ALU opcode is ADD for jal/jalr/bxx/load/store
+    assign is_srx = is_itype & (rv32i_funct3 == `RV32I_FUNCT3_SRL); // SRL/SRA has the same funct3
+    // ALU use add operation for jal/jalr/bxx/load/store instruction
     assign alu_add = is_lui | is_auipc | dec_jump | dec_bxx | dec_mem_read | dec_mem_write;
-
-    // For I/R type instruction, inst[30] is used to distinguish between ADD/SUB, SRL/SRA
-    assign dec_alu_opcode[3:0] = alu_add ? {1'b0, `RV32I_FUNCT3_ADD} : {inst[30], rv32i_funct3};
+    // ALU opcode
+    assign dec_alu_opcode[2:0] = alu_add ? `RV32I_FUNCT3_ADD : rv32i_funct3;
+    assign dec_alu_opcode[3] = (is_rtype & inst[30]) | (is_srx & inst[30]);
 
     // Memory read/write
     assign dec_mem_read  = is_load;

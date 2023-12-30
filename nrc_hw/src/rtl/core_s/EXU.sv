@@ -51,8 +51,8 @@ module EXU #(
     BEU #(.BXXOP_W(BXXOP_W), .XLEN(XLEN))
     u_BEU (
         .bxx_opcode(bxx_opcode),
-        .src1(alu_src1),
-        .src2(alu_src2),
+        .src1(rs1_rdata),
+        .src2(rs2_rdata),
         .result(beu_result));
 
     assign pc_branch = jump | bxx & beu_result;
