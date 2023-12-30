@@ -16,6 +16,8 @@
 
 #define PC_RESET_OFFSET 0x80000000
 #define NUM_REG         32
+#define XLEN            32
+#define NUM_BYTE        4
 
 #define MEM_OFFSET      0x80000000
 #define MSIZE           0x80000000

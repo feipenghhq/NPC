@@ -14,10 +14,14 @@
 #include "common.h"
 #include "config.h"
 #include <stdio.h>
+#include <stdint.h>
 
 extern FILE *mtrace_fp;
+
 // assign the memory into stack
 static byte_t mem[MSIZE];
+
+#define ADDR_MASK (UINTPTR_MAX-0x3)
 
 /**
  * Load the image to memory
@@ -52,6 +56,9 @@ word_t pmem_read(word_t addr, bool ifetch) {
     if (ifetch)  fprintf(mtrace_fp, "Fetch: @0x%x\n", addr);
     if (!ifetch) fprintf(mtrace_fp, " Read: @0x%x\n", addr);
 #endif
+    // make the addr word boundary aligned because the hardware always read
+    // a word each time
+    paddr = paddr & ADDR_MASK;
     return *((word_t *) paddr);
 }
 
@@ -61,8 +68,10 @@ word_t pmem_read(word_t addr, bool ifetch) {
 void pmem_write(word_t addr, word_t data, char strb) {
     uintptr_t offset = addr - MEM_OFFSET;
     uintptr_t paddr = (uintptr_t) mem + offset;
+    // make the addr word boundary aligned
+    paddr = paddr & ADDR_MASK;
     // only support for 32b data
-    for (int i = 0; i < 4; i++) {
+    for (int i = 0; i < NUM_BYTE; i++) {
         if ((strb & (0x1 << i)) != 0) {
             *((byte_t *) (paddr + i)) = (byte_t) (data >> (8*i));
         }

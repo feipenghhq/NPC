@@ -85,7 +85,7 @@ bool difftest_compare(word_t *dut_reg, word_t dut_pc ) {
     // make sure register is the same
     for (int i = 0; i < NUM_REG; i++) {
       if (ref_reg[i] != dut_reg[i]) {
-        log_err("difftest: Register Value mismatch after executing instruction on PC: 0x%08x."
+        log_err("difftest: Register Value mismatch after executing instruction on PC: 0x%08x. "
                 "Reg %s ($%d). Ref: 0x%08x. Dut: 0x%08x",
                 dut_pc, reg_id2str(i), i, ref_reg[i], dut_reg[i]);
         pass = false;

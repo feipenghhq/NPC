@@ -144,6 +144,7 @@ static void trace_func_call(word_t pc, word_t nxtpc, word_t inst) {
     fprintf(ftrace_fp, "0x%x: ", pc);
     for (int i = 0; i < level; i++) fprintf(ftrace_fp, "  ");
     fprintf(ftrace_fp, "call [%s@0x%x]\n", find_func_name(nxtpc), nxtpc);
+    fflush(ftrace_fp);
     level++;
   }
 }
@@ -153,6 +154,7 @@ static void trace_func_ret(word_t pc, word_t nxtpc, word_t inst) {
     fprintf(ftrace_fp, "0x%x: ", pc);
     for (int i = 0; i < level; i++) fprintf(ftrace_fp, "  ");
     fprintf(ftrace_fp, "ret [%s@0x%x]\n", find_func_name(nxtpc), nxtpc);
+    fflush(ftrace_fp);
     level--;
   }
 }

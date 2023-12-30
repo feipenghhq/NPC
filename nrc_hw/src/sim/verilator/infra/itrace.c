@@ -35,6 +35,7 @@ void itrace_write(word_t pc, word_t inst) {
     char msg[MSG_LEN];
     sprintf(msg, "0x%08x: 0x%08x%s", pc, inst, disasm(&inst, pc));
     fprintf(itrace_fp, "%s\n", msg);
+    fflush(itrace_fp);
     iringbuf_write(msg);
 }
 

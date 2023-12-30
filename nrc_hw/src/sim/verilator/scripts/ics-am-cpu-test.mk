@@ -20,7 +20,7 @@ IMAGE_PATH = $(AM_KERNELS_PATH)/tests/cpu-tests/build
 TEST_NAME_MAX_LEN = 26
 
 # get all the tests in the test suites
-ICS_AM_CPU_TESTS = $(sort $(basename $(notdir $(shell find $(IMAGE_PATH) -name "*-nemu.bin"))))
+ICS_AM_CPU_TESTS = $(sort $(basename $(notdir $(shell find $(IMAGE_PATH) -name "*-npc.bin"))))
 
 ics_am_cpu_tests: $(ICS_AM_CPU_TESTS)
 	@cat $(RESULT)
