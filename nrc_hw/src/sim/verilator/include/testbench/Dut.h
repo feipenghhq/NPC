@@ -42,7 +42,7 @@ public:
     virtual void clk_tick()=0;
     virtual bool run(uint64_t step)=0;
     virtual void trace(word_t pc, word_t nxtpc, word_t inst);
-    virtual void difftest();
+    virtual void difftest(word_t pc);
     virtual void check();
     virtual bool report();
 
