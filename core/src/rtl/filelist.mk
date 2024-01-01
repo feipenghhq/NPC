@@ -7,7 +7,7 @@
 # ------------------------------------------------------------------------------------------------
 
 # path
-RTL_PATH = src/rtl
+RTL_PATH = core/src/rtl
 
 # Verilog source file
 ifeq ($(CPU),CORE_S)

@@ -15,7 +15,7 @@
 OUTPUT_DIR = $(BUILD_DIR)/verilator
 
 ### Path
-VERILATOR_PATH = $(shell realpath src/sim/verilator)
+VERILATOR_PATH = $(shell realpath sim/verilator)
 
 ## verilator build flags and options
 VERILATOR_FLAGS += --x-assign unique --x-initial unique
@@ -109,7 +109,7 @@ lint: $(VERILOG_SRCS)
 TEST_SUITES ?= ics-am-cpu-test
 
 ### Include the test suites specific makefile
-include src/sim/verilator/scripts/$(TEST_SUITES).mk
+include sim/verilator/scripts/$(TEST_SUITES).mk
 
 ### File to store test result
 RESULT = $(OUTPUT_DIR)/.result

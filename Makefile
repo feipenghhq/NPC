@@ -22,11 +22,11 @@ TOP = core_s
 endif
 
 # Include RTL filelist
-include src/rtl/filelist.mk
+include core/src/rtl/filelist.mk
 
-# Include verilator flow
+# Include flow makefile
 ifeq ($(FLOW),sim)
-include scripts/verilator.mk
+include sim/verilator/scripts/verilator.mk
 endif
 
 # List information about the Design and Flow
