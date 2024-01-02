@@ -11,6 +11,7 @@
 #include <getopt.h>
 #include "testbench/Core_s.h"
 #include "paddr.h"
+#include "device.h"
 #include "common.h"
 #include "config.h"
 
@@ -165,7 +166,9 @@ static Dut *select_dut(int argc, char *argv[], test_info *info) {
 int tb_exec(int argc, char *argv[]) {
 
     parse_args(argc, argv);
+
     init_log();
+    init_device();
     Dut *dut = select_dut(argc, argv, &info);
     size_t mem_size = load_image(info.image);
 #ifdef CONFIG_ITRACE

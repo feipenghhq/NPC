@@ -12,6 +12,7 @@
 #include <stdint.h>
 #include "config.h"
 #include "paddr.h"
+#include "mmio.h"
 
 //----------------------------------------------
 // Function prototype, global variable
@@ -99,7 +100,7 @@ static void out_of_bound(word_t addr) {
 void paddr_write(word_t addr, word_t data, char strb) {
     if (likely(in_pmem(addr))) return pmem_write(addr, data, strb);
 #ifdef CONFIG_HAS_DEVICE
-    // FIXME
+    return mmio_write(addr, data);
 #endif
     out_of_bound(addr);
 }
@@ -110,7 +111,7 @@ void paddr_write(word_t addr, word_t data, char strb) {
 word_t paddr_read(word_t addr, bool ifetch) {
     if (likely(in_pmem(addr))) return pmem_read(addr, ifetch);
 #ifdef CONFIG_HAS_DEVICE
-    // FIXME
+    return mmio_read(addr);
 #endif
     out_of_bound(addr);
     return 0;
