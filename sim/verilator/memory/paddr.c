@@ -6,15 +6,16 @@
  * Date Created: 12/18/2023
  *
  * ------------------------------------------------------------------------------------------------
- * memory: memory related functions for the verilator testbench
- * ------------------------------------------------------------------------------------------------
  */
 
-#include "memory.h"
-#include "common.h"
-#include "config.h"
 #include <stdio.h>
 #include <stdint.h>
+#include "config.h"
+#include "paddr.h"
+
+//----------------------------------------------
+// Function prototype, global variable
+//-----------------------------------------------
 
 extern FILE *mtrace_fp;
 
@@ -50,7 +51,7 @@ size_t load_image(const char *img) {
  * read memory. always read word_t size
  */
 word_t pmem_read(word_t addr, bool ifetch) {
-    uintptr_t offset = addr - MEM_OFFSET;
+    uintptr_t offset = addr - MEM_BASE;
     uintptr_t paddr = (uintptr_t) mem + offset;
 #ifdef CONFIG_MTRACE
     if (ifetch)  fprintf(mtrace_fp, "Fetch: @0x%x\n", addr);
@@ -66,7 +67,7 @@ word_t pmem_read(word_t addr, bool ifetch) {
  * write memory. always write word_t size
  */
 void pmem_write(word_t addr, word_t data, char strb) {
-    uintptr_t offset = addr - MEM_OFFSET;
+    uintptr_t offset = addr - MEM_BASE;
     uintptr_t paddr = (uintptr_t) mem + offset;
     // make the addr word boundary aligned
     paddr = paddr & ADDR_MASK;
@@ -84,3 +85,34 @@ void pmem_write(word_t addr, word_t data, char strb) {
 byte_t *mem_ptr() {
     return mem;
 }
+
+/**
+ * Check if the addr is out of memory bound
+ */
+static void out_of_bound(word_t addr) {
+    Panic("paddr out of bound. addr: 0x%08x", addr);
+}
+
+/**
+ * Write on physical address
+ */
+void paddr_write(word_t addr, word_t data, char strb) {
+    if (likely(in_pmem(addr))) return pmem_write(addr, data, strb);
+#ifdef CONFIG_HAS_DEVICE
+    // FIXME
+#endif
+    out_of_bound(addr);
+}
+
+/**
+ * read on physical address
+ */
+word_t paddr_read(word_t addr, bool ifetch) {
+    if (likely(in_pmem(addr))) return pmem_read(addr, ifetch);
+#ifdef CONFIG_HAS_DEVICE
+    // FIXME
+#endif
+    out_of_bound(addr);
+    return 0;
+}
+

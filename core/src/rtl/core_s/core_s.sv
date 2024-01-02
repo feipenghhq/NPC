@@ -184,7 +184,8 @@ module core_s #(
 
         // fetch instruction
         always @(*) begin
-            dpi_pmem_read(pc, inst, 1'b1);
+            inst = 0;
+            if (rst_b) dpi_pmem_read(pc, inst, 1'b1);
         end
 
         // data memory access

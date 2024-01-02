@@ -16,6 +16,12 @@
 
 #include "debug.h"
 
+#define DUT_CORE_S "core_s"
+#define SUITE_ICS_AM_CPU_TEST "ics-am-cpu-test"
+
 #define ARRLEN(arr) (sizeof(arr) / sizeof(arr[0]))
+
+#define likely(x)      __builtin_expect((x), 1)
+#define unlikely(x)    __builtin_expect((x), 0)
 
 #endif

@@ -8,11 +8,11 @@
 // tb: test bench
 // ------------------------------------------------------------------------------------------------
 
+#include <getopt.h>
 #include "testbench/Core_s.h"
-#include "memory.h"
+#include "paddr.h"
 #include "common.h"
 #include "config.h"
-#include <getopt.h>
 
 // ------------------------------------
 // Function prototype, global variable

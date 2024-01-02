@@ -11,7 +11,7 @@
  */
 
 #include "Core_s.h"
-#include "memory.h"
+#include "paddr.h"
 
 #define MAX_SIM_TIME 10000
 
@@ -92,9 +92,9 @@ extern "C" void dpi_set_ebreak() {
 }
 
 extern "C" void dpi_pmem_read(int addr, int *rdata, svBit ifetch) {
-    *rdata = pmem_read(addr, ifetch);
+    *rdata = paddr_read(addr, ifetch);
 }
 
 extern "C" void dpi_pmem_write(int addr, int data, char strb) {
-    pmem_write(addr, data, strb);
+    paddr_write(addr, data, strb);
 }

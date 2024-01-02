@@ -56,7 +56,7 @@ void init_ref(size_t mem_size) {
     difftest_init(0);
     // copy the DUT memory to REF memory
     load_from_so(difftest_memcpy);
-    difftest_memcpy(MEM_OFFSET, mem_ptr(), mem_size, DIFFTEST_TO_REF);
+    difftest_memcpy(MEM_BASE, mem_ptr(), mem_size, DIFFTEST_TO_REF);
 }
 
 void ref_exec(uint64_t n) {

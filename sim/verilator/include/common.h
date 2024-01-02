@@ -27,12 +27,6 @@ typedef uint8_t  byte_t;
 typedef uint32_t half_t;
 typedef uint32_t word_t;
 
-// define name for DUT
-#define DUT_CORE_S "core_s"
-
-// define name for suite
-#define SUITE_ICS_AM_CPU_TEST "ics-am-cpu-test"
-
 // test information
 typedef struct test_info {
     char *image;    // test image
