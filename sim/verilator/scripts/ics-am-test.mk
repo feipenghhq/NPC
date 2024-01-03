@@ -28,3 +28,5 @@ $(eval $(call add_tests,ICS_AM_CPU_TESTS,ics_am_cpu_test,$(AM_KERNELS_PATH)/test
 # ics am-kernel am-test
 $(eval $(call add_tests,ICS_AM_AM_TESTS,ics_am_am_test,$(AM_KERNELS_PATH)/tests/am-tests/build,26))
 
+# ics am-kernel alu-test
+$(eval $(call add_tests,ICS_AM_AM_TESTS,ics_am_alu_test,$(AM_KERNELS_PATH)/tests/alu-tests/build,26))

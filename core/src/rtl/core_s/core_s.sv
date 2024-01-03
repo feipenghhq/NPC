@@ -188,21 +188,27 @@ module core_s #(
             if (rst_b) dpi_pmem_read(pc, inst, 1'b1);
         end
 
-        // data memory access
-        always @(data_valid or data_wen or data_addr or data_wdata) begin
+        // data memory write, we should only invoke the DPI function at the end of the clock
+        // this is because once we call the function, the value in the C/C++ variable will change
+        // immediately, but the data should really be written to memory at the end of the clock
+        always @(posedge clk) begin
             if (data_valid) begin
-                if (!data_wen) begin
-                    dpi_pmem_read(data_addr, data_rdata, 1'b0);
-                end
                 if (data_wen) begin
                     dpi_pmem_write(data_addr, data_wdata, {4'b0, data_wstrb});
                 end
             end
-            else begin
-                data_rdata = 0;
-            end
         end
 
+        // data memory read, read takes 0 cycle for single cycle core, so we should read at the
+        // beginning of the clock
+        always @(*) begin
+            data_rdata = 0;
+            if (data_valid) begin
+                if (!data_wen) begin
+                    dpi_pmem_read(data_addr, data_rdata, 1'b0);
+                end
+            end
+        end
     `endif
 
 

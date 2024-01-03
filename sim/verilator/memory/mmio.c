@@ -16,6 +16,8 @@
 // Function prototype, global variable
 //-----------------------------------------------
 
+void difftest_skip_ref();
+
 // assign the mmio space into stack
 static byte_t mmio[MMIO_SIZE];
 
@@ -29,6 +31,9 @@ static byte_t mmio[MMIO_SIZE];
  * read mmio space.
  */
 word_t mmio_read(word_t addr) {
+#ifdef CONFIG_DIFFTEST
+    difftest_skip_ref();
+#endif
     device_read(addr);
     uintptr_t offset = addr - MMIO_BASE;
     uintptr_t paddr = (uintptr_t) mmio + offset;
@@ -42,6 +47,9 @@ word_t mmio_read(word_t addr) {
  * Write to mmio space
  */
 void mmio_write(word_t addr, word_t data) {
+#ifdef CONFIG_DIFFTEST
+    difftest_skip_ref();
+#endif
     uintptr_t offset = addr - MMIO_BASE;
     uintptr_t paddr = (uintptr_t) mmio + offset;
     paddr = paddr & ADDR_MASK; // make addr align to word boundary

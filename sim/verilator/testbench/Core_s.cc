@@ -65,14 +65,13 @@ void Core_s::reset() {
 bool Core_s::run(uint64_t step) {
     int cnt = 0;
     while(!finished && ((step < 0 && sim_time < MAX_SIM_TIME)  || cnt < step)) {
-        word_t pc = top->pc;
         clk_tick();
         // trace need to be put here because the next_pc is updated at this point
         // while the change has not been committed yet
         trace(top->pc, top->core_s->u_IFU->next_pc, top->core_s->inst);
         clk_tick();
         // diff test need to be put here as the change has been committed at this point
-        difftest(pc);
+        difftest(top->pc);
         cnt++;
         check();
     }

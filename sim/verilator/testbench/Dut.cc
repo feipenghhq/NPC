@@ -113,10 +113,10 @@ void Dut::trace(word_t pc, word_t nxtpc, word_t inst) {
 
 void Dut::difftest(word_t pc) {
 #ifdef CONFIG_DIFFTEST
-    void ref_exec(uint64_t n);
+    void ref_exec(uint64_t n, word_t *dut_reg, word_t *dut_pc);
     bool difftest_compare(word_t *dut_reg, word_t dut_pc);
-    ref_exec(1);
-    read_reg();
+    read_reg(); // read the register from DUT
+    ref_exec(1, regs, &pc);
     bool diffresult = difftest_compare(regs, pc);
     if (!diffresult) {
         pass = false;

@@ -58,12 +58,15 @@ RTL_SRCS  += $(addprefix -I,$(VERILOG_INCS))
 
 ### C/CPP source file
 
-### Verilator c and cpp source file
+### c and cpp source file
 C_SRCS   += $(shell find $(VERILATOR_PATH) -name "*.c")
 CXX_SRCS += $(shell find $(VERILATOR_PATH) -name "*.cc")
 
-### Verilator include directory
-C_INCS    += $(sort $(dir $(shell find $(VERILATOR_PATH) -name "*.h")))
+### c and cpp header file
+C_HDRS   += $(shell find $(VERILATOR_PATH) -name "*.h")
+
+### c and cpp include include directory
+C_INCS	 += $(sort $(dir $(C_HDRS)))
 
 ### All C/CPP files
 TB_SRCS   += $(C_SRCS)
@@ -78,7 +81,7 @@ TB_SRCS   += $(addprefix -CFLAGS -I, $(abspath $(C_INCS)))
 OBJECT = V$(TOP)
 VPASS = $(OUTPUT_DIR)/.VPASS
 BPASS = $(OUTPUT_DIR)/.BPASS
-REF_SO = $(VERILATOR_PATH)/lib/riscv32-nemu-interpreter-so
+REF_SO = $(VERILATOR_PATH)/difftest/nemu/riscv32-nemu-interpreter-so
 
 ### Build the Verilator executable
 build: $(OBJECT)
@@ -92,7 +95,7 @@ $(BPASS): $(VPASS)
 ### Compile the RTL and TB
 compile: $(VPASS)
 
-$(VPASS): $(VERILOG_SRCS) $(C_SRCS) $(CXX_SRCS)
+$(VPASS): $(VERILOG_SRCS) $(C_SRCS) $(CXX_SRCS) $(C_HDRS)
 	$(info --> Verilatring)
 	@mkdir -p $(BUILD_DIR)
 	@verilator $(VERILATOR_FLAGS) $(CFLAGS) $(LDFLAGS) $(RTL_SRCS) $(TB_SRCS) && touch $@
