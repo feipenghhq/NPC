@@ -31,11 +31,14 @@
 //----------------------------------------------
 // Debug
 //----------------------------------------------
+#ifdef CONFIG_TRACE
 #define CONFIG_ITRACE
 #define CONFIG_IRINGBUF_SIZE 128
 #define CONFIG_IRINGBUF_LEN  8
 #define CONFIG_MTRACE
 #define CONFIG_FTRACE
+#endif
+
 #define CONFIG_DIFFTEST
 
 //----------------------------------------------
@@ -43,6 +46,7 @@
 //----------------------------------------------
 #define CONFIG_HAS_DEVICE
 #define CONFIG_HAS_SERIAL
+#define CONFIG_HAS_TIMER
 
 //----------------------------------------------
 // ICS AM MMIO Map

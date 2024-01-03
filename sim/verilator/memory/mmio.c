@@ -34,12 +34,11 @@ word_t mmio_read(word_t addr) {
 #ifdef CONFIG_DIFFTEST
     difftest_skip_ref();
 #endif
-    device_read(addr);
     uintptr_t offset = addr - MMIO_BASE;
     uintptr_t paddr = (uintptr_t) mmio + offset;
     paddr = paddr & ADDR_MASK; // make addr align to word boundary
     // call device callback function first then read
-    device_read(addr);
+    device_read(addr, mmio);
     return *((word_t *) paddr);
 }
 
@@ -55,6 +54,6 @@ void mmio_write(word_t addr, word_t data) {
     paddr = paddr & ADDR_MASK; // make addr align to word boundary
     // write first then call device callback function
     *((word_t *) paddr) = data;
-    device_write(addr, data);
+    device_write(addr, data, mmio);
 }
 

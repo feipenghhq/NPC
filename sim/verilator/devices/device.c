@@ -16,7 +16,6 @@
 static IOMap devices[NUM_DEVICE];
 static int nr_device = 0;
 
-void init_serial();
 
 /**
  * Add a device to device list
@@ -48,31 +47,36 @@ static int search_device(word_t addr) {
 void init_device() {
     log_info("Initializing device.");
 #ifdef CONFIG_HAS_SERIAL
+    void init_serial();
     init_serial();
+#endif
+#ifdef CONFIG_HAS_TIMER
+    void init_timer();
+    init_timer();
 #endif
 }
 
 /**
  * Access device
  */
-inline void device_access(word_t addr, word_t data, bool is_write) {
+inline void device_access(word_t addr, word_t data, bool is_write, byte_t *mmio) {
     int device = search_device(addr);
     if (devices[device].callback) {
-        devices[device].callback(addr, data, is_write);
+        devices[device].callback(addr, data, is_write, mmio);
     }
 }
 
 /**
  * Write to the device
  */
-void device_write(word_t addr, word_t data) {
-    device_access(addr, data, true);
+void device_write(word_t addr, word_t data, byte_t *mmio) {
+    device_access(addr, data, true, mmio);
 }
 
 /**
  * read to the device
  */
-void device_read(word_t addr) {
-    device_access(addr, 0, false);
+void device_read(word_t addr, byte_t *mmio) {
+    device_access(addr, 0, false, mmio);
 }
 
