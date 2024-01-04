@@ -26,6 +26,7 @@ typedef struct IOMap {
 
 void add_device(const char *name, void *start, void *end, device_callback callback);
 void init_device();
+void update_device();
 void device_write(word_t addr, word_t data, byte_t *mmio);
 void device_read(word_t addr, byte_t *mmio);
 

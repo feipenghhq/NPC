@@ -13,5 +13,6 @@
 
 word_t mmio_read(word_t addr);
 void mmio_write(word_t addr, word_t data);
+byte_t *mmio_ptr();
 
 #endif

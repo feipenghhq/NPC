@@ -57,3 +57,9 @@ void mmio_write(word_t addr, word_t data) {
     device_write(addr, data, mmio);
 }
 
+/**
+ * Get the pointer to mmio
+ */
+byte_t *mmio_ptr() {
+    return mmio;
+}

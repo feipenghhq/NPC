@@ -18,19 +18,24 @@ OUTPUT_DIR = $(BUILD_DIR)/verilator
 VERILATOR_PATH = $(shell realpath sim/verilator)
 
 ## verilator build flags and options
-VERILATOR_FLAGS += --x-assign unique --x-initial unique
+##VERILATOR_FLAGS += --x-assign unique --x-initial unique
 VERILATOR_FLAGS += --cc --exe -j 0
 VERILATOR_FLAGS += --Mdir $(OUTPUT_DIR) --top-module $(TOP)
 VERILATOR_FLAGS += --trace
+VERILATOR_FLAGS += -O3 --x-assign fast --x-initial fast --noassert
 
 ### CFLAGS for g++ build in verilator
 CFLAGS += -CFLAGS -mcmodel=large
 #### for difftest nemu shared lib
 CFLAGS += -CFLAGS -lreadline
+#### for SDL
+CFLAGS += $(addprefix -CFLAGS ,$(shell sdl2-config --cflags))
 #### for LLVM disasm
 CFLAGS += $(addprefix -CFLAGS ,$(shell llvm-config --cflags))
 
 ### LDFLAGS for g++ build in verilator
+#### for SDL
+LDFLAGS += $(addprefix -LDFLAGS ,$(shell sdl2-config --libs))
 #### for LLVM disasm
 LDFLAGS += $(addprefix -LDFLAGS ,$(shell llvm-config --ldflags --libs))
 

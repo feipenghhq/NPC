@@ -54,6 +54,22 @@ void init_device() {
     void init_timer();
     init_timer();
 #endif
+#ifdef CONFIG_HAS_VGACTL
+    void init_vgactl();
+    void init_framebuffer();
+    init_vgactl();
+    init_framebuffer();
+#endif
+}
+
+/**
+ * Initialize the device
+ */
+void update_device() {
+#ifdef CONFIG_VGA_SHOW_SCREEN
+    void vga_update_screen();
+    vga_update_screen();
+#endif
 }
 
 /**

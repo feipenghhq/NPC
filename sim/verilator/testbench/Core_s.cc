@@ -12,6 +12,7 @@
 
 #include "Core_s.h"
 #include "paddr.h"
+#include "device.h"
 
 #define MAX_SIM_TIME 10000
 
@@ -72,8 +73,9 @@ bool Core_s::run(uint64_t step) {
         clk_tick();
         // diff test need to be put here as the change has been committed at this point
         difftest(top->pc);
-        cnt++;
+        update_device();
         check();
+        cnt++;
     }
     return finished;
 }

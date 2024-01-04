@@ -31,14 +31,11 @@
 //----------------------------------------------
 // Debug
 //----------------------------------------------
-#ifdef CONFIG_TRACE
-#define CONFIG_ITRACE
-#define CONFIG_IRINGBUF_SIZE 128
-#define CONFIG_IRINGBUF_LEN  8
-#define CONFIG_MTRACE
-#define CONFIG_FTRACE
-#endif
-
+//#define CONFIG_ITRACE
+//#define CONFIG_IRINGBUF_SIZE 128
+//#define CONFIG_IRINGBUF_LEN  8
+//#define CONFIG_MTRACE
+//#define CONFIG_FTRACE
 #define CONFIG_DIFFTEST
 
 //----------------------------------------------
@@ -47,6 +44,8 @@
 #define CONFIG_HAS_DEVICE
 #define CONFIG_HAS_SERIAL
 #define CONFIG_HAS_TIMER
+#define CONFIG_HAS_VGACTL
+#define CONFIG_VGA_SHOW_SCREEN
 
 //----------------------------------------------
 // ICS AM MMIO Map
@@ -64,7 +63,7 @@
 #define FB_ADDR         (MMIO_BASE + 0x1000000)
 #define AUDIO_SBUF_ADDR (MMIO_BASE + 0x1200000)
 
-#define MMIO_END        (MMIO_BASE + 0x1400000 - 1)
-#define MMIO_SIZE       (MMIO_END - MMIO_BASE + 1)
+#define MMIO_SIZE       0x1400000
+#define MMIO_END        (MMIO_BASE + MMIO_SIZE - 1)
 
 #endif
