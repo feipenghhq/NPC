@@ -16,6 +16,11 @@
 static IOMap devices[NUM_DEVICE];
 static int nr_device = 0;
 
+void init_serial();
+void init_timer();
+void init_vgactl();
+void init_framebuffer();
+void vga_update_screen();
 
 /**
  * Add a device to device list
@@ -47,16 +52,12 @@ static int search_device(word_t addr) {
 void init_device() {
     log_info("Initializing device.");
 #ifdef CONFIG_HAS_SERIAL
-    void init_serial();
     init_serial();
 #endif
 #ifdef CONFIG_HAS_TIMER
-    void init_timer();
     init_timer();
 #endif
 #ifdef CONFIG_HAS_VGACTL
-    void init_vgactl();
-    void init_framebuffer();
     init_vgactl();
     init_framebuffer();
 #endif
@@ -67,7 +68,6 @@ void init_device() {
  */
 void update_device() {
 #ifdef CONFIG_VGA_SHOW_SCREEN
-    void vga_update_screen();
     vga_update_screen();
 #endif
 }

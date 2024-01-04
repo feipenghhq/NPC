@@ -37,7 +37,22 @@ menu "Verilator configuration"
 
   config MTRACE
     bool "Enable memory trace"
+    default y
+
+  config MTRACE_WRITE_LOG
+    depends on MTRACE
+    bool "Write the memory trace to a log file "
     default n
+
+  config MRINGBUF_SIZE
+    depends on MTRACE
+    int "Memory Ring buffer entry size"
+    default 128
+
+  config MRINGBUF_LEN
+    depends on MTRACE
+    int "Memory Ring buffer length"
+    default 8
 
   config FTRACE
     bool "Enable function trace"

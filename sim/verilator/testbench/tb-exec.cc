@@ -19,6 +19,7 @@
 // Function prototype, global variable
 // ------------------------------------
 
+// test information
 static test_info info = {
     .trace=false,
     .elf=NULL,
@@ -35,6 +36,14 @@ FILE *itrace_fp = NULL;
 FILE *mtrace_fp = NULL;
 FILE *ftrace_fp = NULL;
 FILE *log_fp = NULL;
+
+// Function prototype
+void itrace_init();
+void itrace_close();
+
+void init_disasm();
+void init_ftrace(const char *elf);
+void init_difftest(char *ref, size_t mem_size);
 
 // ------------------------------------
 // Functions
@@ -118,7 +127,7 @@ int parse_args(int argc, char *argv[]) {
  * Initialize the log files
  */
 static void init_log() {
-#ifdef CONFIG_ITRACE
+#ifdef CONFIG_ITRACE_WRITE_LOG
     itrace_fp = fopen(itrace_log, "w");
     Check(itrace_fp, "Failed to open %s", itrace_log);
 #endif
@@ -145,6 +154,18 @@ static void close_log() {
 }
 
 
+static void init_trace() {
+#ifdef CONFIG_ITRACE
+     itrace_init();
+#endif
+}
+
+static void close_trace() {
+#ifdef CONFIG_ITRACE
+     itrace_close();
+#endif
+}
+
 /**
  * Select and create different top based on the DUT
  */
@@ -168,19 +189,17 @@ int tb_exec(int argc, char *argv[]) {
     parse_args(argc, argv);
 
     init_log();
+    init_trace();
     init_device();
     Dut *dut = select_dut(argc, argv, &info);
     size_t mem_size = load_image(info.image);
 #ifdef CONFIG_ITRACE
-    void init_disasm();
     init_disasm();
 #endif
 #ifdef CONFIG_FTRACE
-    void init_ftrace(const char *elf);
     init_ftrace(info.elf);
 #endif
 #ifdef CONFIG_DIFFTEST
-    void init_difftest(char *ref, size_t mem_size);
     init_difftest(info.ref, mem_size);
 #endif
 
@@ -189,6 +208,7 @@ int tb_exec(int argc, char *argv[]) {
     dut->run(-1); // run till the end of the test
     bool success = dut->report();
 
+    close_trace();
     close_log();
     delete dut;
     return success;

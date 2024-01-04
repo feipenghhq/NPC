@@ -64,6 +64,8 @@
 #define Check(cond, msg, ...) \
     do {if(!(cond)) {log_err(msg, ##__VA_ARGS__); errno=0; exit(1);}} while(0)
 
+#define CheckMalloc(cond, ...) Check(cond, "malloc error");
+
 #define Panic(msg, ...) \
     do {log_err(msg, ##__VA_ARGS__); errno=0; exit(1);} while(0)
 
