@@ -2,3 +2,7 @@ build
 obj_dir
 *.log
 *.vcd
+.config*
+..config*
+include/generated
+include/config

@@ -12,6 +12,7 @@
 
 #ifndef __CONFHG_H__
 #define __CONFIG_H__
+#include "autoconf.h"
 
 //----------------------------------------------
 // CPU
@@ -27,25 +28,6 @@
 #define MEM_BASE        0x80000000
 #define MSIZE           0x8000000
 #define MEM_END         (MEM_BASE + MSIZE - 1)
-
-//----------------------------------------------
-// Debug
-//----------------------------------------------
-//#define CONFIG_ITRACE
-//#define CONFIG_IRINGBUF_SIZE 128
-//#define CONFIG_IRINGBUF_LEN  8
-//#define CONFIG_MTRACE
-//#define CONFIG_FTRACE
-#define CONFIG_DIFFTEST
-
-//----------------------------------------------
-// Device
-//----------------------------------------------
-#define CONFIG_HAS_DEVICE
-#define CONFIG_HAS_SERIAL
-#define CONFIG_HAS_TIMER
-#define CONFIG_HAS_VGACTL
-#define CONFIG_VGA_SHOW_SCREEN
 
 //----------------------------------------------
 // ICS AM MMIO Map

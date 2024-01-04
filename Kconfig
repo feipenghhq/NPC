@@ -1,0 +1,81 @@
+mainmenu "NRC Verilator Configuration Menu"
+
+#--------------------------------------
+# CPU configuration
+#--------------------------------------
+menu "CPU configuration"
+
+endmenu
+
+#--------------------------------------
+# Verilator configuration
+#--------------------------------------
+
+menu "Verilator configuration"
+
+
+  menu "Trace and Debug"
+
+  config ITRACE
+    bool "Enable instruction trace."
+    default y
+
+  config ITRACE_WRITE_LOG
+    depends on ITRACE
+    bool "Write the instruction trace to a log file "
+    default n
+
+  config IRINGBUF_SIZE
+    depends on ITRACE
+    int "Instruction Ring buffer entry size"
+    default 128
+
+  config IRINGBUF_LEN
+    depends on ITRACE
+    int "Instruction Ring buffer length"
+    default 8
+
+  config MTRACE
+    bool "Enable memory trace"
+    default n
+
+  config FTRACE
+    bool "Enable function trace"
+    default n
+
+  config DIFFTEST
+    bool "Enable difftest."
+    default y
+
+  endmenu
+
+
+  menu "Device"
+
+  config HAS_DEVICE
+    bool "Enable device"
+    default y
+
+  config HAS_SERIAL
+    depends on HAS_DEVICE
+    bool "Enable serial device"
+    default y
+
+  config HAS_TIMER
+    depends on HAS_DEVICE
+    bool "Enable timer device"
+    default y
+
+  config HAS_VGACTL
+    depends on HAS_DEVICE
+    bool "Enable VGA"
+    default y
+
+  config VGA_SHOW_SCREEN
+    depends on HAS_VGACTL
+    bool "Show VGA screen using SDL "
+    default y
+
+  endmenu
+
+endmenu

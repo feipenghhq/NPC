@@ -69,6 +69,7 @@ CXX_SRCS += $(shell find $(VERILATOR_PATH) -name "*.cc")
 
 ### c and cpp header file
 C_HDRS   += $(shell find $(VERILATOR_PATH) -name "*.h")
+C_HDRS	 += $(WORK_DIR)/include/generated/autoconf.h
 
 ### c and cpp include include directory
 C_INCS	 += $(sort $(dir $(C_HDRS)))
