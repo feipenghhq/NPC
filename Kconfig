@@ -54,6 +54,17 @@ menu "Verilator configuration"
     int "Memory Ring buffer length"
     default 8
 
+  config MTRACE_START
+    depends on MTRACE
+    hex "Memory trace start address"
+    default 0
+
+  config MTRACE_END
+    depends on MTRACE
+    hex "Memory trace end address"
+    default 0xFFFFFFFF
+
+
   config FTRACE
     bool "Enable function trace"
     default n

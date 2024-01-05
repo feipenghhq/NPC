@@ -172,8 +172,8 @@ module core_s #(
     `ifdef VERILATOR
 
         import "DPI-C" function void dpi_set_ebreak();
-        import "DPI-C" function void dpi_pmem_read(input int addr, output int rdata, input bit ifetch);
-        import "DPI-C" function void dpi_pmem_write(input int addr, input int data, input byte strb);
+        import "DPI-C" function void dpi_pmem_read(input int pc, input int addr, output int rdata, input bit ifetch);
+        import "DPI-C" function void dpi_pmem_write(input int pc, input int addr, input int data, input byte strb);
 
         // set ebreak
         always @(posedge clk) begin
@@ -185,7 +185,7 @@ module core_s #(
         // fetch instruction
         always @(*) begin
             inst = 0;
-            if (rst_b) dpi_pmem_read(pc, inst, 1'b1);
+            if (rst_b) dpi_pmem_read(pc, pc, inst, 1'b1);
         end
 
         // data memory write, we should only invoke the DPI function at the end of the clock
@@ -194,19 +194,19 @@ module core_s #(
         always @(posedge clk) begin
             if (data_valid) begin
                 if (data_wen) begin
-                    dpi_pmem_write(data_addr, data_wdata, {4'b0, data_wstrb});
+                    dpi_pmem_write(pc, data_addr, data_wdata, {4'b0, data_wstrb});
                 end
             end
         end
 
-        // data memory read, read takes 0 cycle for single cycle core, so we should read at the
-        // beginning of the clock
-        always @(*) begin
+        // data memory read, read takes 0 cycle for single cycle core we should read combinationally
+        // Another thing is we want to make only ONE call to dpi_pmem_read otherwise we will mess up
+        // with the memory trace function (same memory read will be traced multiple time)
+        // NOTE: We need to make sure that in verilator the new cycle start with clock being high!!!
+        always @(clk) begin
             data_rdata = 0;
-            if (data_valid) begin
-                if (!data_wen) begin
-                    dpi_pmem_read(data_addr, data_rdata, 1'b0);
-                end
+            if (!clk && data_valid && !data_wen) begin
+                dpi_pmem_read(pc, data_addr, data_rdata, 1'b0);
             end
         end
     `endif

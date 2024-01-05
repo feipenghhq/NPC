@@ -22,6 +22,7 @@
 int reg_str2id(const char *);
 const char *reg_id2str(int id);
 void itrace_print();
+void mtrace_print();
 bool check_finish(Dut *top, const char *suite);
 bool check_pass(Dut *top, const char *suite);
 
@@ -75,6 +76,9 @@ bool Dut::report() {
     else {
     #ifdef CONFIG_ITRACE
         itrace_print();
+    #endif
+    #ifdef CONFIG_MTRACE
+        mtrace_print();
     #endif
         report_reg();
         log_err("Test FAIL!");

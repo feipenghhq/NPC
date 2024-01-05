@@ -18,11 +18,11 @@ OUTPUT_DIR = $(BUILD_DIR)/verilator
 VERILATOR_PATH = $(shell realpath sim/verilator)
 
 ## verilator build flags and options
-##VERILATOR_FLAGS += --x-assign unique --x-initial unique
+VERILATOR_FLAGS += --x-assign unique --x-initial unique
 VERILATOR_FLAGS += --cc --exe -j 0
 VERILATOR_FLAGS += --Mdir $(OUTPUT_DIR) --top-module $(TOP)
 VERILATOR_FLAGS += --trace
-VERILATOR_FLAGS += -O3 --x-assign fast --x-initial fast --noassert
+VERILATOR_FLAGS += -O3
 
 ### CFLAGS for g++ build in verilator
 CFLAGS += -CFLAGS -mcmodel=large
@@ -32,6 +32,10 @@ CFLAGS += -CFLAGS -lreadline
 CFLAGS += $(addprefix -CFLAGS ,$(shell sdl2-config --cflags))
 #### for LLVM disasm
 CFLAGS += $(addprefix -CFLAGS ,$(shell llvm-config --cflags))
+#### for gdb
+ifeq ($(GDB),1)
+CFLAGS += -CFLAGS -g
+endif
 
 ### LDFLAGS for g++ build in verilator
 #### for SDL
@@ -125,8 +129,8 @@ $(shell > $(RESULT))
 ### Define function to run simulation. Usage: $(call run_sim,image,elf,suite,test,dut,maxlen)
 define run_sim
 	@/bin/echo -e "run:\n\t $(OUTPUT_DIR)/$(OBJECT) \
-		--image $(1) --elf $(2) --suite $(3) --test $(4) --dut $(5) $(ARG_WAVE)" \
-		--ref $(REF_SO) \
+		--image $(1) --elf $(2) --suite $(3) --test $(4) --dut $(5) $(ARG_WAVE) \
+		--ref $(REF_SO)" \
 		>> $(OUTPUT_DIR)/makefile.$(4)
 	@if make -s -f $(OUTPUT_DIR)/makefile.$(4); then \
 		printf "[%$(6)s] $(COLOR_GREEN)%s!$(COLOR_NONE)\n" $(4) PASS >> $(RESULT); \

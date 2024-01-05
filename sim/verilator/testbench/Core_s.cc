@@ -21,6 +21,7 @@
 // ---------------------------------------------
 
 bool dpi_ebreak;
+word_t dpi_mem_access_pc;
 
 // ---------------------------------------------
 // Class functions
@@ -92,10 +93,12 @@ extern "C" void dpi_set_ebreak() {
     dpi_ebreak = true;
 }
 
-extern "C" void dpi_pmem_read(int addr, int *rdata, svBit ifetch) {
+extern "C" void dpi_pmem_read(int pc, int addr, int *rdata, svBit ifetch) {
     *rdata = paddr_read(addr, ifetch);
+    dpi_mem_access_pc = pc;
 }
 
-extern "C" void dpi_pmem_write(int addr, int data, char strb) {
+extern "C" void dpi_pmem_write(int pc, int addr, int data, char strb) {
     paddr_write(addr, data, strb);
+    dpi_mem_access_pc = pc;
 }

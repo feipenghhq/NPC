@@ -40,7 +40,8 @@ FILE *log_fp = NULL;
 // Function prototype
 void itrace_init();
 void itrace_close();
-
+void mtrace_init();
+void mtrace_close();
 void init_disasm();
 void init_ftrace(const char *elf);
 void init_difftest(char *ref, size_t mem_size);
@@ -131,7 +132,7 @@ static void init_log() {
     itrace_fp = fopen(itrace_log, "w");
     Check(itrace_fp, "Failed to open %s", itrace_log);
 #endif
-#ifdef CONFIG_MTRACE
+#ifdef CONFIG_MTRACE_WRITE_LOG
     mtrace_fp = fopen(mtrace_log, "w");
     Check(mtrace_fp, "Failed to open %s", mtrace_log);
 #endif
@@ -158,11 +159,17 @@ static void init_trace() {
 #ifdef CONFIG_ITRACE
      itrace_init();
 #endif
+#ifdef CONFIG_MTRACE
+     mtrace_init();
+#endif
 }
 
 static void close_trace() {
 #ifdef CONFIG_ITRACE
      itrace_close();
+#endif
+#ifdef CONFIG_MTRACE
+     mtrace_close();
 #endif
 }
 

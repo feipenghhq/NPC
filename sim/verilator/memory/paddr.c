@@ -18,12 +18,16 @@
 // Function prototype, global variable
 //-----------------------------------------------
 
-extern FILE *mtrace_fp;
-
-// assign the memory into stack
-static byte_t mem[MSIZE];
-
 #define ADDR_MASK (UINTPTR_MAX-0x3)
+
+extern FILE *mtrace_fp;
+static byte_t mem[MSIZE]; // assign the memory into stack
+
+void mtrace_write(word_t addr, word_t strb, word_t data, bool is_write, bool ifetch);
+
+//----------------------------------------------
+// Functions
+//-----------------------------------------------
 
 /**
  * Load the image to memory
@@ -45,9 +49,6 @@ size_t load_image(const char *img) {
     return size;
 }
 
-// FIXME: Need to make the addr word boundary aligned
-// FIXME: add a macro for # of byte
-
 /**
  * read memory. always read word_t size
  */
@@ -55,8 +56,8 @@ word_t pmem_read(word_t addr, bool ifetch) {
     uintptr_t offset = addr - MEM_BASE;
     uintptr_t paddr = (uintptr_t) mem + offset;
 #ifdef CONFIG_MTRACE
-    if (ifetch)  fprintf(mtrace_fp, "Fetch: @0x%x\n", addr);
-    if (!ifetch) fprintf(mtrace_fp, " Read: @0x%x\n", addr);
+    word_t data = *((word_t *) paddr); // this is byte aligned not word aligned
+    mtrace_write(addr, 0, data, false, ifetch);
 #endif
     // make the addr word boundary aligned because the hardware always read
     // a word each time
@@ -79,7 +80,7 @@ void pmem_write(word_t addr, word_t data, char strb) {
         }
     }
 #ifdef CONFIG_MTRACE
-    fprintf(mtrace_fp, "Write: @0x%x\n", addr);
+    mtrace_write(addr, strb, data, true, false);
 #endif
 }
 
