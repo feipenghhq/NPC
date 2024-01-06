@@ -10,10 +10,23 @@
 
 #include <getopt.h>
 #include "testbench/Core_s.h"
-#include "paddr.h"
-#include "device.h"
 #include "common.h"
-#include "config.h"
+
+// ------------------------------------
+// C Function prototype
+// ------------------------------------
+
+extern "C" {
+    void itrace_init();
+    void itrace_close();
+    void mtrace_init();
+    void mtrace_close();
+    void init_disasm();
+    void init_device();
+    size_t load_image(const char *img);
+    void init_ftrace(const char *elf);
+    void init_difftest(char *ref, size_t mem_size);
+}
 
 // ------------------------------------
 // Function prototype, global variable
@@ -36,15 +49,6 @@ FILE *itrace_fp = NULL;
 FILE *mtrace_fp = NULL;
 FILE *ftrace_fp = NULL;
 FILE *log_fp = NULL;
-
-// Function prototype
-void itrace_init();
-void itrace_close();
-void mtrace_init();
-void mtrace_close();
-void init_disasm();
-void init_ftrace(const char *elf);
-void init_difftest(char *ref, size_t mem_size);
 
 // ------------------------------------
 // Functions

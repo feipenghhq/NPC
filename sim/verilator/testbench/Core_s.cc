@@ -11,10 +11,18 @@
  */
 
 #include "Core_s.h"
-#include "paddr.h"
-#include "device.h"
 
 #define MAX_SIM_TIME 10000
+
+// ---------------------------------------------
+// C Function prototype
+// ---------------------------------------------
+
+extern "C" {
+    void paddr_write(word_t addr, word_t data, char strb);
+    word_t paddr_read(word_t addr, bool ifetch);
+    void update_device();
+}
 
 // ---------------------------------------------
 // Function prototype and global variable
@@ -89,16 +97,20 @@ word_t Core_s::reg_id2val(int id) {
 // DPI function
 // ---------------------------------------------
 
-extern "C" void dpi_set_ebreak() {
-    dpi_ebreak = true;
-}
+extern "C" {
 
-extern "C" void dpi_pmem_read(int pc, int addr, int *rdata, svBit ifetch) {
-    *rdata = paddr_read(addr, ifetch);
-    dpi_mem_access_pc = pc;
-}
+    void dpi_set_ebreak() {
+        dpi_ebreak = true;
+    }
 
-extern "C" void dpi_pmem_write(int pc, int addr, int data, char strb) {
-    paddr_write(addr, data, strb);
-    dpi_mem_access_pc = pc;
+    void dpi_pmem_read(int pc, int addr, int *rdata, svBit ifetch) {
+        *rdata = paddr_read(addr, ifetch);
+        dpi_mem_access_pc = pc;
+    }
+
+    void dpi_pmem_write(int pc, int addr, int data, char strb) {
+        paddr_write(addr, data, strb);
+        dpi_mem_access_pc = pc;
+    }
+
 }

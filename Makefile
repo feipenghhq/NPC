@@ -18,11 +18,12 @@ PWD_DIR   = $(PWD)
 #------------------------------------------------
 
 FLOW ?= sim
+TOP  ?= core_s
 
 #------------------------------------------------
 # Include RTL filelist
 #------------------------------------------------
-#include $(WORK_DIR)/core/src/rtl/filelist.mk
+include $(WORK_DIR)/core/src/rtl/filelist.mk
 
 #------------------------------------------------
 # Include flow makefile

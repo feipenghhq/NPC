@@ -10,7 +10,7 @@
 RTL_PATH = core/src/rtl
 
 # Verilog source file
-ifeq ($(CPU),CORE_S)
+ifeq ($(TOP),core_s)
 VERILOG_SRCS += $(wildcard $(RTL_PATH)/core_s/*.sv $(RTL_PATH)/core_s/*.v)
 endif
 

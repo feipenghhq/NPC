@@ -16,13 +16,23 @@
 #include "Dut.h"
 
 // ---------------------------------------------
+// C Function prototype
+// ---------------------------------------------
+
+extern "C" {
+    int reg_str2id(const char *);
+    const char *reg_id2str(int id);
+    void itrace_print();
+    void mtrace_print();
+    void ref_exec(uint64_t n, word_t *dut_reg, word_t *dut_pc);
+    bool difftest_compare(word_t *dut_reg, word_t dut_pc);
+    void itrace_write(word_t pc, word_t inst);
+}
+
+// ---------------------------------------------
 // Function prototype and global variable
 // ---------------------------------------------
 
-int reg_str2id(const char *);
-const char *reg_id2str(int id);
-void itrace_print();
-void mtrace_print();
 bool check_finish(Dut *top, const char *suite);
 bool check_pass(Dut *top, const char *suite);
 
@@ -106,7 +116,6 @@ void Dut::report_reg() {
 
 void Dut::trace(word_t pc, word_t nxtpc, word_t inst) {
 #ifdef CONFIG_ITRACE
-    void itrace_write(word_t pc, word_t inst);
     itrace_write(pc, inst);
 #endif
 #ifdef CONFIG_FTRACE
@@ -117,8 +126,6 @@ void Dut::trace(word_t pc, word_t nxtpc, word_t inst) {
 
 void Dut::difftest(word_t pc) {
 #ifdef CONFIG_DIFFTEST
-    void ref_exec(uint64_t n, word_t *dut_reg, word_t *dut_pc);
-    bool difftest_compare(word_t *dut_reg, word_t dut_pc);
     read_reg(); // read the register from DUT
     ref_exec(1, regs, &pc);
     bool diffresult = difftest_compare(regs, pc);

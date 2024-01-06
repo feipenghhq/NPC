@@ -1,10 +1,5 @@
-build
-obj_dir
-*.log
-*.vcd
+output
 .config*
 ..config*
 include/generated
 include/config
-**.o
-**.d
