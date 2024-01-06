@@ -10,7 +10,8 @@
 # Directory
 #------------------------------------------------
 WORK_DIR  = $(shell git rev-parse --show-toplevel)
-BUILD_DIR = $(WORK_DIR)/build
+MAKE_DIR  = $(WORK_DIR)/scripts/Makefile
+PWD_DIR   = $(PWD)
 
 #------------------------------------------------
 # Select Flow and Target CPU Design
@@ -18,39 +19,25 @@ BUILD_DIR = $(WORK_DIR)/build
 
 FLOW ?= sim
 
-CPU ?= CORE_S
-
-# Select Different Top based on CPU
-ifeq ($(CPU),CORE_S)
-TOP = core_s
-endif
-
 #------------------------------------------------
 # Include RTL filelist
 #------------------------------------------------
-include $(WORK_DIR)/core/src/rtl/filelist.mk
+#include $(WORK_DIR)/core/src/rtl/filelist.mk
 
 #------------------------------------------------
 # Include flow makefile
 #------------------------------------------------
-ifeq ($(FLOW),sim)
-include $(WORK_DIR)/scripts/verilator.mk
-endif
 
-include $(WORK_DIR)/scripts/kconfig.mk
+#flow makefile
+include $(MAKE_DIR)/flow.$(FLOW).mk
 
-#------------------------------------------------
-# List information about the Design and Flow
-#------------------------------------------------
-ifeq ($(findstring $(MAKECMDGOALS),clean,menuconfig),)
-$(info Target CPU: $(TOP))
-$(info Running $(FLOW) Flow)
-endif
+#kconfig flow
+include $(MAKE_DIR)/kconfig.mk
 
 #------------------------------------------------
 # Clean
 #------------------------------------------------
 .PHONY: clean
-clean:
+clean: $(FLOW).clean
 	rm -rf $(BUILD_DIR) *.log *.vcd
 

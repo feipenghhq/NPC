@@ -23,7 +23,7 @@
 extern FILE *mtrace_fp;
 static byte_t mem[MSIZE]; // assign the memory into stack
 
-void mtrace_write(word_t addr, word_t strb, word_t data, bool is_write, bool ifetch);
+void mtrace_write(word_t addr, word_t data, bool is_write, bool ifetch);
 
 //----------------------------------------------
 // Functions
@@ -57,7 +57,7 @@ word_t pmem_read(word_t addr, bool ifetch) {
     uintptr_t paddr = (uintptr_t) mem + offset;
 #ifdef CONFIG_MTRACE
     word_t data = *((word_t *) paddr); // this is byte aligned not word aligned
-    mtrace_write(addr, 0, data, false, ifetch);
+    mtrace_write(addr, data, false, ifetch);
 #endif
     // make the addr word boundary aligned because the hardware always read
     // a word each time
@@ -80,7 +80,7 @@ void pmem_write(word_t addr, word_t data, char strb) {
         }
     }
 #ifdef CONFIG_MTRACE
-    mtrace_write(addr, strb, data, true, false);
+    mtrace_write(addr, data, true, false);
 #endif
 }
 

@@ -8,9 +8,9 @@
  * ------------------------------------------------------------------------------------------------
  */
 
-#include "config.h"
 #include "common.h"
 #include "device.h"
+#include "config.h"
 
 //----------------------------------------------
 // Function prototype, global variable

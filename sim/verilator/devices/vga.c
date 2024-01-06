@@ -40,10 +40,12 @@ static void init_screen();
 
 static const char vga_name[] = "vgactl";
 static const char fb_name[] = "framebuffer";
-static uint32_t *vgactl_regs = (uint32_t *) (mmio_ptr() + (VGACTL_BASE - MMIO_BASE));
+static uint32_t *vgactl_regs = NULL;
+static uint32_t *framebuffer = NULL;
 
 void init_vgactl() {
     add_device(vga_name, (void *) VGACTL_BASE, (void *) VGACTL_END, NULL /*No callback function*/);
+    vgactl_regs = (uint32_t *) (mmio_ptr() + (VGACTL_BASE - MMIO_BASE));
     vgactl_regs[0] = SCREEN_H | SCREEN_W << 16;
     vgactl_regs[1] = 0;
     init_screen();
@@ -52,6 +54,7 @@ void init_vgactl() {
 
 void init_framebuffer() {
     add_device(fb_name, (void *) FB_BASE, (void *) FB_END, NULL /*No callback function*/);
+    framebuffer = (uint32_t *) (mmio_ptr() + (FB_BASE - MMIO_BASE));
     log_info("Initialized Frame Buffer");
 }
 
@@ -64,7 +67,6 @@ void init_framebuffer() {
 
 static SDL_Renderer *renderer = NULL;
 static SDL_Texture *texture = NULL;
-static uint32_t *framebuffer = (uint32_t *) (mmio_ptr() + (FB_BASE - MMIO_BASE));
 
 static void init_screen() {
     SDL_Window *window = NULL;

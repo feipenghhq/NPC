@@ -28,7 +28,10 @@ inline static time_t _get_usec() {
     return tv.tv_sec * 1000000 + tv.tv_usec;
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
 void timer_callback(word_t addr, word_t data, bool is_write, byte_t *mmio) {
+#pragma GCC diagnostic pop
     Check(!is_write, "timer only support read mode");
     time_t usec, current;
     current = _get_usec();

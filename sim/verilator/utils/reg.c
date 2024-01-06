@@ -18,7 +18,7 @@ static const char *regs[] = {
 };
 
 int reg_str2id(const char *s) {
-    int i;
+    size_t i;
     for (i = 0; i < ARRLEN(regs); i++) {
         if (strcmp(regs[i], s) == 0) {
             return i;

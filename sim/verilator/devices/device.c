@@ -8,9 +8,8 @@
  * ------------------------------------------------------------------------------------------------
  */
 
-#include "config.h"
-#include "device.h"
 #include "mmio.h"
+#include "device.h"
 
 #define NUM_DEVICE 10
 static IOMap devices[NUM_DEVICE];
@@ -75,7 +74,7 @@ void update_device() {
 /**
  * Access device
  */
-inline void device_access(word_t addr, word_t data, bool is_write, byte_t *mmio) {
+void device_access(word_t addr, word_t data, bool is_write, byte_t *mmio) {
     int device = search_device(addr);
     if (devices[device].callback) {
         devices[device].callback(addr, data, is_write, mmio);

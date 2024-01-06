@@ -10,8 +10,6 @@
  * ------------------------------------------------------------------------------------------------
  */
 
-#ifndef __DEVICE_H__
-#define __DEVICE_H__
 
 #include "common.h"
 
@@ -30,4 +28,3 @@ void update_device();
 void device_write(word_t addr, word_t data, byte_t *mmio);
 void device_read(word_t addr, byte_t *mmio);
 
-#endif
