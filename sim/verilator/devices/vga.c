@@ -65,11 +65,11 @@ void init_framebuffer() {
 #ifdef CONFIG_VGA_SHOW_SCREEN
 #include <SDL2/SDL.h>
 
+static SDL_Window *window = NULL;
 static SDL_Renderer *renderer = NULL;
 static SDL_Texture *texture = NULL;
 
 static void init_screen() {
-    SDL_Window *window = NULL;
     window = SDL_CreateWindow("NRC", 0, 0, SCREEN_W * 2, SCREEN_H * 2, 0);
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
     texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888,
@@ -91,11 +91,16 @@ void vga_update_screen() {
   }
 }
 
+void vga_close_screen() {
+    SDL_DestroyWindow(window);
+}
+
 #else
 
 static void init_screen() {}
 static void update_screen() {}
 void vga_update_screen() {}
+void vga_close_screen() {}
 
 #endif
 

@@ -9,18 +9,27 @@
  */
 
 #include "config.h"
+
+#ifdef CONFIG_HAS_DEVICE
+
 #include "mmio.h"
 #include "device.h"
+#include <SDL2/SDL.h>
 
-#define NUM_DEVICE 10
+#define NUM_DEVICE 8
 static IOMap devices[NUM_DEVICE];
 static int nr_device = 0;
+bool NRC_SDL_quit = false;
 
 void init_serial();
 void init_timer();
 void init_vgactl();
 void init_framebuffer();
+void init_keyboard();
 void vga_update_screen();
+void vga_close_screen();
+void send_key(SDL_Event *event);
+void sdl();
 
 /**
  * Add a device to device list
@@ -61,6 +70,9 @@ void init_device() {
     init_vgactl();
     init_framebuffer();
 #endif
+#ifdef CONFIG_HAS_KEYBOARD
+    init_keyboard();
+#endif
 }
 
 /**
@@ -70,6 +82,7 @@ void update_device() {
 #ifdef CONFIG_VGA_SHOW_SCREEN
     vga_update_screen();
 #endif
+    sdl();
 }
 
 /**
@@ -95,4 +108,38 @@ void device_write(word_t addr, word_t data, byte_t *mmio) {
 void device_read(word_t addr, byte_t *mmio) {
     device_access(addr, 0, false, mmio);
 }
+
+/**
+ * SDL related task
+ */
+void sdl() {
+    SDL_Event event;
+    while(SDL_PollEvent(&event)) {
+        switch(event.type) {
+            case SDL_QUIT: {
+                vga_close_screen();
+                NRC_SDL_quit = true;
+                return;
+            }
+        #ifdef CONFIG_HAS_KEYBOARD
+            case SDL_KEYUP:
+            case SDL_KEYDOWN: {
+                send_key(&event);
+                break;
+            }
+        #endif
+            default: {}
+        }
+    }
+}
+
+#else
+
+void init_device() {}
+void update_device() {}
+
+#endif
+
+
+
 

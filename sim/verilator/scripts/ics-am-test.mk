@@ -39,8 +39,9 @@ $(eval $(call add_tests,COREMARK,coremark,$(AM_KERNELS_HOME)/benchmarks/coremark
 $(eval $(call add_tests,DHRYSTONE,dhrystone,$(AM_KERNELS_HOME)/benchmarks/dhrystone,26))
 $(eval $(call add_tests,MICROBENCH,microbench,$(AM_KERNELS_HOME)/benchmarks/microbench,26))
 
-# ics am-kernel demo
+# ics am-kernel kernels
 $(eval $(call add_tests,DEMO,demo,$(AM_KERNELS_HOME)/kernels/demo,26))
+$(eval $(call add_tests,TYPING-GAME,typing-game,$(AM_KERNELS_HOME)/kernels/typing-game,26))
 
 # ics fceux-am
 $(eval $(call add_tests,FCEUX,fceux,$(FCEUX_AM_HOME),26))

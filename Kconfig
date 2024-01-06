@@ -92,6 +92,11 @@ menu "Verilator configuration"
     bool "Enable timer device"
     default y
 
+  config HAS_KEYBOARD
+    depends on HAS_DEVICE
+    bool "Enable keyboard device"
+    default y
+
   config HAS_VGACTL
     depends on HAS_DEVICE
     bool "Enable VGA"

@@ -113,6 +113,7 @@ $(OBJECT): $(BPASS)
 
 $(BPASS): $(VPASS)
 	$(info --> Building Verilator Executable)
+	rm -f $(BUILD_DIR)/$(OBJECT)
 	@$(MAKE) V$(TOP) -C $(BUILD_DIR) -f V$(TOP).mk -s && touch $@
 
 ### Compile the RTL and TB
