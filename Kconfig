@@ -107,6 +107,11 @@ menu "Verilator configuration"
     bool "Show VGA screen using SDL "
     default y
 
+  config HAS_AUDIO
+    depends on HAS_DEVICE
+    bool "Enable Audio"
+    default y
+
   endmenu
 
 endmenu

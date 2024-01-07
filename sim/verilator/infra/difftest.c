@@ -63,6 +63,7 @@ void init_difftest(char *ref, size_t mem_size) {
 void init_ref(size_t mem_size) {
     difftest_init(0);
     difftest_memcpy(MEM_BASE, mem_ptr(), mem_size, DIFFTEST_TO_REF);
+    log_info("Initialized difftest");
 }
 
 /**

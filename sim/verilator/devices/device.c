@@ -26,6 +26,8 @@ void init_timer();
 void init_vgactl();
 void init_framebuffer();
 void init_keyboard();
+void init_audio();
+void init_sbuf();
 void vga_update_screen();
 void vga_close_screen();
 void send_key(SDL_Event *event);
@@ -43,15 +45,25 @@ void add_device(const char *name, void *start, void *end, device_callback callba
     nr_device++;
 }
 
+static void list_device() {
+    log_info("Listing all the devices");
+    for (int i = 0; i < nr_device; i++) {
+        log_info("Device: %s. Start: 0x%08lx, End: 0x%08lx",
+                devices[i].name, (size_t) devices[i].start, (size_t) devices[i].end);
+//        log_info("Device: %s.", devices[i].name);
+    }
+}
+
 /**
  * search for device index in device list
  */
 static int search_device(word_t addr) {
     int i;
     for (i = 0; i < nr_device; i++) {
-        if ((size_t) addr >= (size_t) devices[i].start && (size_t) addr < (size_t) devices[i].end)
+        if ((size_t) addr >= (size_t) devices[i].start && (size_t) addr <= (size_t) devices[i].end)
             return i;
     }
+    list_device();
     Panic("Failed to find device at addr 0x%08x", addr);
 }
 
@@ -72,6 +84,10 @@ void init_device() {
 #endif
 #ifdef CONFIG_HAS_KEYBOARD
     init_keyboard();
+#endif
+#ifdef CONFIG_HAS_AUDIO
+    init_audio();
+    init_sbuf();
 #endif
 }
 

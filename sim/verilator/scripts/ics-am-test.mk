@@ -42,6 +42,7 @@ $(eval $(call add_tests,MICROBENCH,microbench,$(AM_KERNELS_HOME)/benchmarks/micr
 # ics am-kernel kernels
 $(eval $(call add_tests,DEMO,demo,$(AM_KERNELS_HOME)/kernels/demo,26))
 $(eval $(call add_tests,TYPING-GAME,typing-game,$(AM_KERNELS_HOME)/kernels/typing-game,26))
+$(eval $(call add_tests,BAD-APPLE,bad-apple,$(AM_KERNELS_HOME)/kernels/bad-apple,26))
 
 # ics fceux-am
 $(eval $(call add_tests,FCEUX,fceux,$(FCEUX_AM_HOME),26))
