@@ -25,6 +25,8 @@ module CSR #(
     input  logic [XLEN-1:0]     csr_wdata,
     input  logic [11:0]         csr_addr,
     output logic [XLEN-1:0]     csr_rdata,
+    // Trap control
+    input  logic                ent_trap,
     // CSR field HW write
     input  logic [XLEN-1:0]     csr_wr_mepc_mepc,
     input  logic [XLEN-2:0]     csr_wr_mcause_exception_code,

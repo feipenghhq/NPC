@@ -30,11 +30,23 @@ module IDU #(
     output logic               dec_alu_src1_sel_0,
     output logic               dec_alu_src2_sel_rs2,
     output logic               dec_alu_src2_sel_imm,
+    // branch aand jump
     output logic               dec_bxx,
     output logic               dec_jump,
+    // memory access
     output logic               dec_mem_read,
     output logic               dec_mem_write,
+    // system instruction
     output logic               dec_ebreak,
+    output logic               dec_ecall,
+    output logic               dec_mret,
+    // csr access
+    output logic               dec_csr_write,
+    output logic               dec_csr_set,
+    output logic               dec_csr_clear,
+    output logic               dec_csr_read,
+    output logic [11:0]        dec_csr_addr,
+    output logic               dec_csr_sel_imm,
     // register access
     output logic               dec_rd_write,
     output logic [REGID_W-1:0] dec_rd_addr,
@@ -59,6 +71,7 @@ module IDU #(
     logic [XLEN-1:0] j_type_imm_val;
     logic [XLEN-1:0] s_type_imm_val;
     logic [XLEN-1:0] b_type_imm_val;
+    logic [XLEN-1:0] c_type_imm_val;
 
     // immediate type
     logic u_type_imm;
@@ -66,6 +79,7 @@ module IDU #(
     logic j_type_imm;
     logic s_type_imm;
     logic b_type_imm;
+    logic c_type_imm; // for csr
 
     // phase
     logic phase3;
@@ -96,6 +110,14 @@ module IDU #(
 
     // Instruction: system
     logic is_ebreak;
+    logic is_ecall;
+    logic is_mret;
+
+    // CSR
+    logic is_csrrw;
+    logic is_csrrs;
+    logic is_csrrc;
+    logic is_csr;
 
     // Special values for some fields for instruction decode
     // Format: <field>_<value>
@@ -107,7 +129,6 @@ module IDU #(
 
     // MISC
     logic alu_add;
-    logic is_srx;
 
     // -------------------------------------------
     // Extract Each field from Instruction
@@ -151,19 +172,21 @@ module IDU #(
     assign is_system = phase3 & (rv32i_opcode == `RV32I_OPCODE_SYSTEM);
 
     // Logic/Arithematic Funct3 Decode
-    assign is_slt  = (rv32i_funct3 == `RV32I_FUNCT3_SLT)  & (is_itype | (is_rtype & rv32i_funct7_0x00));
-    assign is_sltu = (rv32i_funct3 == `RV32I_FUNCT3_SLTU) & (is_itype | (is_rtype & rv32i_funct7_0x00));
-    assign is_xor  = (rv32i_funct3 == `RV32I_FUNCT3_XOR)  & (is_itype | (is_rtype & rv32i_funct7_0x00));
-    assign is_or   = (rv32i_funct3 == `RV32I_FUNCT3_OR)   & (is_itype | (is_rtype & rv32i_funct7_0x00));
-    assign is_and  = (rv32i_funct3 == `RV32I_FUNCT3_AND)  & (is_itype | (is_rtype & rv32i_funct7_0x00));
-    assign is_add  = (rv32i_funct3 == `RV32I_FUNCT3_ADD)  & (is_itype | (is_rtype & rv32i_funct7_0x00));
-    assign is_sub  = (rv32i_funct3 == `RV32I_FUNCT3_SUB)  & (            is_rtype & rv32i_funct7_0x20);
-    assign is_sll  = (rv32i_funct3 == `RV32I_FUNCT3_SLL)  & ((is_itype & rv32i_funct7_0x00) | (is_rtype & rv32i_funct7_0x00));
-    assign is_srl  = (rv32i_funct3 == `RV32I_FUNCT3_SRL)  & ((is_itype & rv32i_funct7_0x00) | (is_rtype & rv32i_funct7_0x00));
-    assign is_sra  = (rv32i_funct3 == `RV32I_FUNCT3_SRA)  & ((is_itype & rv32i_funct7_0x20) | (is_rtype & rv32i_funct7_0x20));
+    assign is_sub  = (rv32i_funct3 == `RV32I_FUNCT3_SUB)  & ((is_rtype & rv32i_funct7_0x20));
+    assign is_slt  = (rv32i_funct3 == `RV32I_FUNCT3_SLT)  & ((is_rtype & rv32i_funct7_0x00) | is_itype);
+    assign is_sltu = (rv32i_funct3 == `RV32I_FUNCT3_SLTU) & ((is_rtype & rv32i_funct7_0x00) | is_itype);
+    assign is_xor  = (rv32i_funct3 == `RV32I_FUNCT3_XOR)  & ((is_rtype & rv32i_funct7_0x00) | is_itype);
+    assign is_or   = (rv32i_funct3 == `RV32I_FUNCT3_OR)   & ((is_rtype & rv32i_funct7_0x00) | is_itype);
+    assign is_and  = (rv32i_funct3 == `RV32I_FUNCT3_AND)  & ((is_rtype & rv32i_funct7_0x00) | is_itype);
+    assign is_add  = (rv32i_funct3 == `RV32I_FUNCT3_ADD)  & ((is_rtype & rv32i_funct7_0x00) | is_itype);
+    assign is_sll  = (rv32i_funct3 == `RV32I_FUNCT3_SLL)  & ((is_rtype & rv32i_funct7_0x00) | (is_itype & rv32i_funct7_0x00));
+    assign is_srl  = (rv32i_funct3 == `RV32I_FUNCT3_SRL)  & ((is_rtype & rv32i_funct7_0x00) | (is_itype & rv32i_funct7_0x00));
+    assign is_sra  = (rv32i_funct3 == `RV32I_FUNCT3_SRA)  & ((is_rtype & rv32i_funct7_0x20) | (is_itype & rv32i_funct7_0x20));
 
     // ebreak
-    assign is_ebreak = is_system & rv32i_funct3_0 & rv32i_funct7_0x00 & (inst[24:20] == 1) & (inst[19:15] == 0) & (inst[11:7] == 0);
+    assign is_ebreak = is_system & (inst[31:7] == 25'h2000);
+    assign is_ecall = is_system & (inst[31:7] == 25'h0);
+    assign is_mret = is_system & (inst[31:7] == 25'h604000);
 
     // -------------------------------------------
     // Control signal generation
@@ -187,12 +210,12 @@ module IDU #(
     assign dec_bxx_opcode = rv32i_funct3;
     assign dec_mem_opcode = rv32i_funct3;
 
-    assign is_srx = is_itype & (rv32i_funct3 == `RV32I_FUNCT3_SRL); // SRL/SRA has the same funct3
     // ALU use add operation for jal/jalr/bxx/load/store instruction
     assign alu_add = is_lui | is_auipc | dec_jump | dec_bxx | dec_mem_read | dec_mem_write;
     // ALU opcode
     assign dec_alu_opcode[2:0] = alu_add ? `RV32I_FUNCT3_ADD : rv32i_funct3;
-    assign dec_alu_opcode[3] = (is_rtype & inst[30]) | (is_srx & inst[30]);
+    // additional bit to distingush between add/sub, srli/srai, and srl, sra
+    assign dec_alu_opcode[3] = is_sub | is_sra;
 
     // Memory read/write
     assign dec_mem_read  = is_load;
@@ -202,11 +225,40 @@ module IDU #(
     assign dec_jump = is_jal | is_jalr;
     assign dec_bxx  = is_bxx;
 
-    // ebreak
+    // system
     assign dec_ebreak = is_ebreak;
+    assign dec_ecall = is_ecall;
+    assign dec_mret = is_mret;
+
 
     // registr write
-    assign dec_rd_write = is_lui | is_auipc | dec_jump | is_itype | is_rtype | is_load;
+    assign dec_rd_write = is_lui | is_auipc | dec_jump | is_itype | is_rtype | is_load | is_csr;
+
+    // -------------------------------------------
+    // ZICSR Extension
+    // -------------------------------------------
+
+    logic csrrw_read;
+    logic csrrs_write;
+    logic csrrc_write;
+
+    assign is_csrrw = is_system & (rv32i_funct3[1:0] == 2'b01);
+    assign is_csrrs = is_system & (rv32i_funct3[1:0] == 2'b10);
+    assign is_csrrc = is_system & (rv32i_funct3[1:0] == 2'b11);
+    assign is_csr = is_csrrw | is_csrrs | is_csrrc;
+
+    assign csrrw_read  = dec_rd_addr != 0;   // csrrw/csrrwi should not read CSR if rd = x0
+    assign csrrs_write = dec_rs1_addr != 0;  // csrrs/csrrsi should not write CSR if rs1 = x0 (uimm = 0)
+    assign csrrc_write = csrrs_write;        // csrrc/csrrci should not write CSR if rs1 = x0 (uimm = 0)
+
+    assign dec_csr_write = is_csrrw;
+    assign dec_csr_set   = is_csrrs & csrrs_write;
+    assign dec_csr_clear = is_csrrc & csrrc_write;
+    assign dec_csr_read  = is_csrrw & csrrw_read | is_csrrs | is_csrrc;
+    assign dec_csr_addr  = inst[31:20];
+    assign dec_csr_sel_imm = is_system & (rv32i_funct3[2]);
+    assign c_type_imm    = is_system & rv32i_funct3[2];
+    assign c_type_imm_val = {27'b0, dec_rs1_addr};
 
     // -------------------------------------------
     // Immediate generation
@@ -224,10 +276,10 @@ module IDU #(
     assign s_type_imm_val = {{20{inst[31]}}, inst[31:25], inst[11:7]};
     assign b_type_imm_val = {{20{inst[31]}}, inst[7], inst[30:25], inst[11:8], 1'b0};
 
-    assign dec_imm = ({XLEN{i_type_imm}}   & i_type_imm_val) |
-                     ({XLEN{u_type_imm}}   & u_type_imm_val) |
-                     ({XLEN{j_type_imm}}   & j_type_imm_val) |
-                     ({XLEN{s_type_imm}}   & s_type_imm_val) |
-                     ({XLEN{b_type_imm}}   & b_type_imm_val);
-
+    assign dec_imm = ({XLEN{i_type_imm}} & i_type_imm_val) |
+                     ({XLEN{u_type_imm}} & u_type_imm_val) |
+                     ({XLEN{j_type_imm}} & j_type_imm_val) |
+                     ({XLEN{s_type_imm}} & s_type_imm_val) |
+                     ({XLEN{b_type_imm}} & b_type_imm_val) |
+                     ({XLEN{c_type_imm}} & c_type_imm_val);
 endmodule

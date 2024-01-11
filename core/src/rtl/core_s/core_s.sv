@@ -34,6 +34,7 @@ module core_s #(
     // -------------------------------------------
     // Signal definition
     // -------------------------------------------
+
     // From IDU
     logic [ALUOP_W-1:0] dec_alu_opcode;
     logic [BXXOP_W-1:0] dec_bxx_opcode;
@@ -48,23 +49,50 @@ module core_s #(
     logic               dec_mem_read;
     logic               dec_mem_write;
     logic               dec_ebreak;
+    logic               dec_ecall;
+    logic               dec_mret;
     logic               dec_rd_write;
     logic [REGID_W-1:0] dec_rd_addr;
     logic [REGID_W-1:0] dec_rs1_addr;
     logic [REGID_W-1:0] dec_rs2_addr;
     logic [XLEN-1:0]    dec_imm;
+    logic               dec_csr_write;
+    logic               dec_csr_set;
+    logic               dec_csr_clear;
+    logic               dec_csr_read;
+    logic [11:0]        dec_csr_addr;
+    logic               dec_csr_sel_imm;
+
     // From RegFile
     logic [XLEN-1:0]    rs1_rdata;
     logic [XLEN-1:0]    rs2_rdata;
+
     // From EXU
     logic [XLEN-1:0]    exu_rd_wdata;
     logic               pc_branch;
     logic [XLEN-1:0]    target_pc;
     logic [XLEN-1:0]    alu_result;
+
     // From MEU
     logic [XLEN-1:0]    mem_rd_wdata;
+
     // MISC
     logic [XLEN-1:0]    rd_wdata;
+
+    // CSR and Trap
+    logic [XLEN-1:0]    csr_wdata;
+    logic [XLEN-1:0]    csr_rdata;
+    logic               ent_trap;
+    logic               trap;
+    logic [XLEN-1:0]    trap_pc;
+
+    // CSR register
+    logic [XLEN-1:0]    csr_wr_mepc_mepc;
+    logic [XLEN-2:0]    csr_wr_mcause_exception_code;
+    logic               csr_wr_mcause_interrupt;
+    logic [XLEN-3:0]    csr_rd_mtvec_base;
+    logic [1:0]         csr_rd_mtvec_mode;
+    logic [XLEN-1:0]    csr_rd_mepc_mepc;
 
     // Memory
     logic [XLEN-1:0]    inst/*verilator public*/;       // input instruction
@@ -83,7 +111,10 @@ module core_s #(
     assign data_addr = alu_result;
 
     // Select which source goes to rd
-    assign rd_wdata = dec_mem_read ? mem_rd_wdata : exu_rd_wdata;
+    assign rd_wdata = dec_mem_read ? mem_rd_wdata :
+                      dec_csr_read ? csr_rdata :
+                      exu_rd_wdata;
+    assign csr_wdata = dec_csr_sel_imm ? dec_imm : rs1_rdata;
 
     // -------------------------------------------
     // Module Instantiation
@@ -98,6 +129,8 @@ module core_s #(
         .rst_b(rst_b),
         .pc_branch(pc_branch),
         .target_pc(target_pc),
+        .trap(trap),
+        .trap_pc(trap_pc),
         .pc(pc));
 
     // IDU
@@ -165,6 +198,31 @@ module core_s #(
         .data_wstrb(data_wstrb),
         .data_wdata(data_wdata),
         .data_rdata(data_rdata));
+
+    CSR #(
+        .XLEN(XLEN))
+    u_CSR (
+        .csr_write(dec_csr_write),
+        .csr_set(dec_csr_set),
+        .csr_clear(dec_csr_clear),
+        .csr_read(dec_csr_read),
+        .csr_wdata(csr_wdata),
+        .csr_addr(dec_csr_addr),
+        .csr_rdata(csr_rdata),
+        .ent_trap(ent_trap),
+        .*);
+
+    TRAP #(
+       .XLEN(XLEN))
+    u_TRAP(
+        .ecall(dec_ecall),
+        .mret(dec_mret),
+        .pc(pc),
+        .trap(trap),
+        .trap_pc(trap_pc),
+        .ent_trap(ent_trap),
+        .*
+    );
 
     // -------------------------------------------
     // _Verilator DPI

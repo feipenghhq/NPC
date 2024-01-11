@@ -113,7 +113,7 @@ $(OBJECT): $(BPASS)
 
 $(BPASS): $(VPASS)
 	$(info --> Building Verilator Executable)
-	rm -f $(BUILD_DIR)/$(OBJECT)
+	@rm -f $(BUILD_DIR)/$(OBJECT)
 	@$(MAKE) V$(TOP) -C $(BUILD_DIR) -f V$(TOP).mk -s && touch $@
 
 ### Compile the RTL and TB
@@ -143,11 +143,17 @@ RESULT = $(OUTPUT_DIR)/.result
 $(shell mkdir -p $(OUTPUT_DIR))
 $(shell > $(RESULT))
 
+### Check if we want to dump wave
+WAVE ?= 0
+ifeq ($(WAVE), 1)
+_WAVE := --wave
+endif
+
 ### Define function to run simulation. Usage: $(call run_sim,image,elf,suite,test,dut,maxlen)
 define run_sim
 	@/bin/echo -e " \
 		run:\n\tcd $(OUTPUT_DIR) && $(BUILD_DIR)/$(OBJECT) \
-		--image $(1) --elf $(2) --suite $(3) --test $(4) --dut $(5) $(ARG_WAVE) --ref $(REF_SO) \
+		--image $(1) --elf $(2) --suite $(3) --test $(4) --dut $(5) $(_WAVE) --ref $(REF_SO) \
 		" \
 		>> $(OUTPUT_DIR)/makefile.$(4)
 	@if make -s -f $(OUTPUT_DIR)/makefile.$(4); then \

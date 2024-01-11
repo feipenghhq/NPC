@@ -21,13 +21,18 @@ module IFU #(
 
     input  logic                pc_branch,
     input  logic [XLEN-1:0]     target_pc,
+    input  logic                trap,
+    input  logic [XLEN-1:0]     trap_pc,
     output logic [XLEN-1:0]     pc
 );
 
     logic [XLEN-1:0] next_pc/*verilator public*/;
 
     always @(*) begin
-        if (pc_branch) begin
+        if (trap) begin
+            next_pc = trap_pc;
+        end
+        else if (pc_branch) begin
             next_pc = target_pc;
         end
         else begin

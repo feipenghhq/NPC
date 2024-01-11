@@ -55,6 +55,13 @@
 `define RV32I_FUNCT3_SH        3'b001
 `define RV32I_FUNCT3_SW        3'b010
 
+`define RV32I_FUNC3_CSRRW      3'b001
+`define RV32I_FUNC3_CSRRS      3'b010
+`define RV32I_FUNC3_CSRRC      3'b011
+`define RV32I_FUNC3_CSRRWI     3'b101
+`define RV32I_FUNC3_CSRRSI     3'b110
+`define RV32I_FUNC3_CSRRCI     3'b111
+
 // Instruction Field Range
 `define R_PHASE  1:0
 `define R_OPCODE 6:2
@@ -71,4 +78,8 @@
 `define MEPC                12'h341
 `define MCAUSE              12'h342
 `define MTVAL               12'h343
+
+// Exception code
+`define ECALL_M_MODE_CODE   'd11
+
 `endif
