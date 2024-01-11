@@ -45,7 +45,7 @@ C_OBJS += $(patsubst %.c,$(BUILD_DIR)/%.o,$(C_SRCS))
 ## C Build flags
 ## --------------------------------------------------------
 
-CFLAGS += -g -Wall -O1 -Wextra -rdynamic -MMD
+CFLAGS += -g -Wall -O1 -Werror -rdynamic -MMD
 CFLAGS += -mcmodel=large
 CFLAGS += $(shell sdl2-config --cflags)
 CFLAGS += $(shell llvm-config --cflags)

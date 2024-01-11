@@ -42,10 +42,7 @@ static int sbuf_tail = 0;
 
 void init_audio_SDL();
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-parameter"
 static void audio_callback(word_t addr, word_t data, bool is_write, byte_t *mmio) {
-#pragma GCC diagnostic pop
     if (is_write) {
         word_t offset = addr - AUDIO_BASE;
         switch (offset / 4) {

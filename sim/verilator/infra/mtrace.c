@@ -30,10 +30,7 @@ void mtrace_close() {
 
 void mtrace_write(word_t addr, word_t data, bool is_write, bool ifetch) {
     char msg[MSG_LEN];
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wtype-limits"
     bool in_range = (addr >= CONFIG_MTRACE_START) && (addr <= CONFIG_MTRACE_END);
-#pragma GCC diagnostic pop
     if (!ifetch && in_range) {
         sprintf(msg, "%s: at addr: 0x%08x. data: 0x%08x. (@0x%08x)",
                 is_write ? "write" : " read", addr, data, dpi_mem_access_pc);

@@ -74,10 +74,7 @@ static int keyqueue_dequeue() {
 /**
  * Pop one key from keyqueue and write the data to the MMIO register
  */
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-parameter"
 static void keyboard_callback(word_t addr, word_t data, bool is_write, byte_t *mmio) {
-#pragma GCC diagnostic pop
     uint32_t *keyboard_regs = (uint32_t *) (mmio + (KEYBOARD_BASE - MMIO_BASE));
     *keyboard_regs = keyqueue_dequeue();
 }

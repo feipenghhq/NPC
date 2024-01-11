@@ -22,14 +22,12 @@
 
 static const char name[] = "serial";
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-parameter"
 static void serial_callback(word_t addr, word_t data, bool is_write, byte_t *mmio) {
-#pragma GCC diagnostic pop
     word_t offset = addr - SERIAL_PORT;
     Check(is_write, "Serial only support write mode");
     Check(offset == 0, "Serial only support offset 0x0 for now. offset = 0x%08x", offset);
-    putchar(data);
+    Log("%c", data);
+    fflush(stdout); // flush stdout to make it should the character immediately
 }
 
 void init_serial() {
