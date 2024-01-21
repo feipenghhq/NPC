@@ -72,12 +72,12 @@
 `define R_RD     11:7
 
 // CSR address
-`define MSTATUS             12'h300
-`define MTVEC               12'h305
+`define MSTATUS  12'h300
+`define MTVEC    12'h305
 
-`define MEPC                12'h341
-`define MCAUSE              12'h342
-`define MTVAL               12'h343
+`define MEPC     12'h341
+`define MCAUSE   12'h342
+`define MTVAL    12'h343
 
 // Exception code
 `define ECALL_M_MODE_CODE   'd11

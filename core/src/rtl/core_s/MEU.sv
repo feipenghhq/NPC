@@ -13,10 +13,9 @@
 `include "riscv_isa.svh"
 
 module MEU #(
-    parameter XLEN    = 32,
-    parameter MEMOP_W = 3
+    parameter XLEN = 32
 ) (
-    input  logic [MEMOP_W-1:0] mem_opcode,
+    input  logic [2:0]         mem_opcode,
     input  logic               mem_read,
     input  logic               mem_write,
     input  logic [1:0]         byte_addr,

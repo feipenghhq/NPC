@@ -36,9 +36,9 @@ module core_s #(
     // -------------------------------------------
 
     // From IDU
-    logic [ALUOP_W-1:0] dec_alu_opcode;
-    logic [BXXOP_W-1:0] dec_bxx_opcode;
-    logic [MEMOP_W-1:0] dec_mem_opcode;
+    logic [3:0]         dec_alu_opcode;
+    logic [2:0]         dec_bxx_opcode;
+    logic [2:0]         dec_mem_opcode;
     logic               dec_alu_src1_sel_rs1;
     logic               dec_alu_src1_sel_pc;
     logic               dec_alu_src1_sel_0;
@@ -48,6 +48,8 @@ module core_s #(
     logic               dec_jump;
     logic               dec_mem_read;
     logic               dec_mem_write;
+    logic               dec_mul;
+    logic               dec_div;
     logic               dec_ebreak;
     logic               dec_ecall;
     logic               dec_mret;
@@ -76,6 +78,12 @@ module core_s #(
     // From MEU
     logic [XLEN-1:0]    mem_rd_wdata;
 
+    // From MUL/DIV
+    logic [XLEN-1:0]    mul_result;
+    logic               mul_valid;
+    logic [XLEN-1:0]    div_result;
+    logic               div_valid;
+
     // MISC
     logic [XLEN-1:0]    rd_wdata;
 
@@ -96,12 +104,12 @@ module core_s #(
 
     // Memory
     logic [XLEN-1:0]    inst/*verilator public*/;       // input instruction
-    logic               data_valid; // data memory request
-    logic               data_wen;   // data memory write enable
-    logic [XLEN-1:0]    data_addr;  // data memory address
-    logic [3:0]         data_wstrb; // data memory write strobe
-    logic [XLEN-1:0]    data_wdata; // data memory write data
-    logic [XLEN-1:0]    data_rdata; // data memory read data
+    logic               data_valid;
+    logic               data_wen;
+    logic [XLEN-1:0]    data_addr;
+    logic [3:0]         data_wstrb;
+    logic [XLEN-1:0]    data_wdata;
+    logic [XLEN-1:0]    data_rdata;
 
     // -------------------------------------------
     // Glue logic
@@ -133,16 +141,11 @@ module core_s #(
         .trap_pc(trap_pc),
         .pc(pc));
 
-    // IDU
     IDU #(
         .XLEN(XLEN),
-        .ALUOP_W(ALUOP_W),
-        .BXXOP_W(BXXOP_W),
-        .MEMOP_W(MEMOP_W),
         .REGID_W(REGID_W))
     u_IDU (.*);
 
-    // RegFile
     RegFile #(
         .XLEN(XLEN),
         .REGID_W(REGID_W),
@@ -157,12 +160,8 @@ module core_s #(
         .rd_wdata(rd_wdata),
         .rd_write(dec_rd_write));
 
-    // EXU
     EXU #(
-        .XLEN(XLEN),
-        .ALUOP_W(ALUOP_W),
-        .BXXOP_W(BXXOP_W),
-        .MEMOP_W(MEMOP_W))
+        .XLEN(XLEN))
     u_EXU (
         .alu_opcode(dec_alu_opcode),
         .bxx_opcode(dec_bxx_opcode),
@@ -184,8 +183,7 @@ module core_s #(
 
     // MEU
     MEU #(
-         .XLEN(XLEN),
-         .MEMOP_W(MEMOP_W))
+         .XLEN(XLEN))
     u_MEU (
         .mem_opcode(dec_mem_opcode),
         .mem_read(dec_mem_read),
@@ -221,8 +219,35 @@ module core_s #(
         .trap(trap),
         .trap_pc(trap_pc),
         .ent_trap(ent_trap),
-        .*
-    );
+        .*);
+
+    MUL #(
+       .XLEN(XLEN),
+       .ARCH(0))
+    u_MUL(
+        .clk(clk),
+        .rst_b(rst_b),
+        .in_valid(dec_mul),
+        .in_ready(),
+        .opcode(dec_alu_opcode[1:0]), // reuse the alu_opcode
+        .op1(rs1_rdata),
+        .op2(rs2_rdata),
+        .out_valid(mul_valid),
+        .result(mul_result));
+
+    DIV #(
+       .XLEN(XLEN),
+       .ARCH(0))
+    u_DIV(
+        .clk(clk),
+        .rst_b(rst_b),
+        .in_valid(dec_div),
+        .in_ready(),
+        .opcode(dec_alu_opcode[1:0]), // reuse the alu_opcode
+        .op1(rs1_rdata),
+        .op2(rs2_rdata),
+        .out_valid(div_valid),
+        .result(div_result));
 
     // -------------------------------------------
     // _Verilator DPI

@@ -13,13 +13,12 @@
 `include "riscv_isa.svh"
 
 module ALU #(
-    parameter XLEN    = 32,
-    parameter ALUOP_W = 4
+    parameter XLEN = 32
 ) (
-    input  logic [ALUOP_W-1:0] alu_opcode,
-    input  logic [XLEN-1:0]    alu_src1,
-    input  logic [XLEN-1:0]    alu_src2,
-    output logic [XLEN-1:0]    alu_result
+    input  logic [3:0]          alu_opcode,
+    input  logic [XLEN-1:0]     alu_src1,
+    input  logic [XLEN-1:0]     alu_src2,
+    output logic [XLEN-1:0]     alu_result
 );
 
     // --------------------------------------
@@ -41,6 +40,7 @@ module ALU #(
     logic alu_substract;
     logic alu_adder_cin;
     logic alu_adder_cout;
+
     logic [XLEN-1:0] alu_adder_src1;
     logic [XLEN-1:0] alu_adder_src2;
     logic [XLEN-1:0] alu_adder_result;
@@ -83,10 +83,10 @@ module ALU #(
     // instead of using separate subtracter for sub/slt/sltu instruction,
     // use the same adder as add operation and use 2's complement nature to
     // transfer subtraction to addition operation
-    assign alu_substract = alu_op_sub | alu_op_slt | alu_op_sltu;
+    assign alu_substract  = alu_op_sub | alu_op_slt | alu_op_sltu;
     assign alu_adder_src1 = alu_src1;
     assign alu_adder_src2 = alu_substract ? ~alu_src2 : alu_src2;
-    assign alu_adder_cin = alu_substract ? 1'b1 : 1'b0;
+    assign alu_adder_cin  = alu_substract ? 1'b1 : 1'b0;
     assign {alu_adder_cout, alu_adder_result} = alu_adder_src1 + alu_adder_src2 + {{XLEN{1'b0}}, alu_adder_cin};
 
     // slt result can be calculated with the following cases

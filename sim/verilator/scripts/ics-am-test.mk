@@ -46,3 +46,6 @@ $(eval $(call add_tests,BAD-APPLE,bad-apple,$(AM_KERNELS_HOME)/kernels/bad-apple
 
 # ics fceux-am
 $(eval $(call add_tests,FCEUX,fceux,$(FCEUX_AM_HOME),26))
+
+# nanos-lite
+$(eval $(call add_tests,NANOS-LITE,nanos-lite,$(NANOS_LITE_HOME),26))

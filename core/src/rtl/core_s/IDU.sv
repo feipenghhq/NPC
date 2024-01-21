@@ -14,16 +14,13 @@
 
 module IDU #(
     parameter XLEN    = 32,
-    parameter ALUOP_W = 4,
-    parameter BXXOP_W = 3,
-    parameter MEMOP_W = 3,
     parameter REGID_W = 5
 ) (
     input  logic [XLEN-1:0]    inst,    // input instruction
     // ALU/branch/Mem opcode
-    output logic [ALUOP_W-1:0] dec_alu_opcode,
-    output logic [BXXOP_W-1:0] dec_bxx_opcode,
-    output logic [MEMOP_W-1:0] dec_mem_opcode,
+    output logic [3:0]         dec_alu_opcode,
+    output logic [2:0]         dec_bxx_opcode,
+    output logic [2:0]         dec_mem_opcode,
     // alu src1/src2 selection
     output logic               dec_alu_src1_sel_rs1,
     output logic               dec_alu_src1_sel_pc,
@@ -36,6 +33,9 @@ module IDU #(
     // memory access
     output logic               dec_mem_read,
     output logic               dec_mem_write,
+    // rv32m
+    output logic               dec_mul,
+    output logic               dec_div,
     // system instruction
     output logic               dec_ebreak,
     output logic               dec_ecall,
@@ -261,11 +261,17 @@ module IDU #(
     assign c_type_imm_val = {27'b0, dec_rs1_addr};
 
     // -------------------------------------------
+    // RV32M Extension
+    // -------------------------------------------
+    assign dec_mul = is_rtype & rv32i_funct7_0x01 & ~rv32i_funct3[2];
+    assign dec_div = is_rtype & rv32i_funct7_0x01 & rv32i_funct3[2];
+
+    // -------------------------------------------
     // Immediate generation
     // -------------------------------------------
 
     assign i_type_imm = is_jalr | is_itype | is_load;
-    assign u_type_imm = is_lui | is_auipc;
+    assign u_type_imm = is_lui  | is_auipc;
     assign j_type_imm = is_jal;
     assign s_type_imm = is_store;
     assign b_type_imm = is_bxx;

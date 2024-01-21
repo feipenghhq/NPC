@@ -11,10 +11,9 @@
  */
 
 module BEU #(
-    parameter XLEN    = 32,
-    parameter BXXOP_W = 3
+    parameter XLEN = 32
 ) (
-    input  logic [BXXOP_W-1:0] bxx_opcode,
+    input  logic [2:0]         bxx_opcode,
     input  logic [XLEN-1:0]    src1,
     input  logic [XLEN-1:0]    src2,
     output logic               result
