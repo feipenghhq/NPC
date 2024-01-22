@@ -11,7 +11,7 @@ endmenu
 # Verilator configuration
 #--------------------------------------
 
-menu "Verilator configuration"
+menu "Simulation configuration"
 
 
   menu "Trace and Debug"
@@ -41,7 +41,7 @@ menu "Verilator configuration"
 
   config MTRACE_WRITE_LOG
     depends on MTRACE
-    bool "Write the memory trace to a log file "
+    bool "Write the memory trace to a log file"
     default n
 
   config MRINGBUF_SIZE
@@ -64,14 +64,32 @@ menu "Verilator configuration"
     hex "Memory trace end address"
     default 0xFFFFFFFF
 
-
   config FTRACE
     bool "Enable function trace"
     default n
 
+  config STRACE
+    bool "Enable system call trace"
+    default n
+
   config DIFFTEST
-    bool "Enable difftest."
+    bool "Enable difftest"
     default y
+
+  config WAVE
+    bool "Enable waveform dump"
+    default n
+
+  config WAVE_START
+    depends on WAVE
+    int "Wavefrom start cycle"
+    default 0
+
+  config WAVE_END
+    depends on WAVE
+    int "Wavefrom end cycle"
+    default 1000
+
 
   endmenu
 

@@ -33,11 +33,11 @@ AR = ar
 ## --------------------------------------------------------
 
 C_SRCS += $(shell realpath $(shell find $(VERIL_DIR) -name "*.c") --relative-to .)
+
 C_HDRS += $(shell find $(VERIL_DIR) -name "*.h")
+C_HDRS += $(shell find include/generated -name "*.h")
 
 C_INCS += $(sort $(dir $(C_HDRS)))
-C_INCS += include/generated
-
 
 C_OBJS += $(patsubst %.c,$(BUILD_DIR)/%.o,$(C_SRCS))
 
@@ -65,7 +65,7 @@ $(C_TARGET): $(C_OBJS)
 	@echo +AR "->" $(shell realpath $@ --relative-to .)
 	@$(AR) rcs $@ $(C_OBJS)
 
-$(BUILD_DIR)/%.o: %.c
+$(BUILD_DIR)/%.o: %.c $(C_HDRS)
 	@mkdir -p $(dir $@)
 	@echo +CC $<
 	@$(CC) $(CFLAGS) -c -o $@ $<
@@ -143,17 +143,11 @@ RESULT = $(OUTPUT_DIR)/.result
 $(shell mkdir -p $(OUTPUT_DIR))
 $(shell > $(RESULT))
 
-### Check if we want to dump wave
-WAVE ?= 0
-ifeq ($(WAVE), 1)
-_WAVE := --wave
-endif
-
 ### Define function to run simulation. Usage: $(call run_sim,image,elf,suite,test,dut,maxlen)
 define run_sim
 	@/bin/echo -e " \
 		run:\n\tcd $(OUTPUT_DIR) && $(BUILD_DIR)/$(OBJECT) \
-		--image $(1) --elf $(2) --suite $(3) --test $(4) --dut $(5) $(_WAVE) --ref $(REF_SO) \
+		--image $(1) --elf $(2) --suite $(3) --test $(4) --dut $(5) --ref $(REF_SO) \
 		" \
 		>> $(OUTPUT_DIR)/makefile.$(4)
 	@if make -s -f $(OUTPUT_DIR)/makefile.$(4); then \

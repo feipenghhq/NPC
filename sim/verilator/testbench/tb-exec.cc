@@ -34,7 +34,6 @@ extern "C" {
 
 // test information
 static test_info info = {
-    .trace=false,
     .elf=NULL,
     .ref=NULL,
 };
@@ -43,11 +42,13 @@ static test_info info = {
 const char itrace_log[] = "itrace.log";
 const char mtrace_log[] = "mtrace.log";
 const char ftrace_log[] = "ftrace.log";
+const char strace_log[] = "strace.log";
 const char log_name[]   = "run.log";
 
 FILE *itrace_fp = NULL;
 FILE *mtrace_fp = NULL;
 FILE *ftrace_fp = NULL;
+FILE *strace_fp = NULL;
 FILE *log_fp = NULL;
 
 // ------------------------------------
@@ -64,7 +65,6 @@ static void print_usage(const char *prog) {
     printf("\t-s,--suite SUITE      Test Suite\n");
     printf("\t-t,--test TEST        Test Name\n");
     printf("\t-d,--dut DUT          DUT Top module name\n");
-    printf("\t--wave                Dump the waveform trace\n");
     printf("\t--elf ELF             ELF file for the program\n");
     printf("\t--ref REF_SO          Reference for diff test\n");
     printf("\n");
@@ -102,7 +102,6 @@ int parse_args(int argc, char *argv[]) {
         {"suite", required_argument, 0, 's'},
         {"test",  required_argument, 0, 't'},
         {"dut",   required_argument, 0, 'd'},
-        {"wave",  no_argument      , 0, '0'},
         {"elf",   required_argument, 0, '1'},
         {"ref",   required_argument, 0, '2'},
         // Add more option here if needed
@@ -116,7 +115,6 @@ int parse_args(int argc, char *argv[]) {
             case 's': info.suite = optarg; break;
             case 't': info.test = optarg; break;
             case 'd': info.dut = optarg; break;
-            case '0': info.trace = true; break;
             case '1': info.elf = optarg; break;
             case '2': info.ref = optarg; break;
             default:
@@ -144,6 +142,10 @@ static void init_log() {
     ftrace_fp = fopen(ftrace_log, "w");
     Check(ftrace_fp, "Failed to open %s", ftrace_log);
 #endif
+#ifdef CONFIG_STRACE
+    strace_fp = fopen(strace_log, "w");
+    Check(strace_fp, "Failed to open %s", strace_log);
+#endif
     log_fp = fopen(log_name, "w");
     assert(log_fp);
 }
@@ -152,6 +154,7 @@ static void close_log() {
     if (itrace_fp) fclose(itrace_fp);
     if (mtrace_fp) fclose(mtrace_fp);
     if (ftrace_fp) fclose(ftrace_fp);
+    if (strace_fp) fclose(strace_fp);
     if (log_fp) fclose(log_fp);
     // remove ANSI color coding in log file
     char cmd[] = "sed -i 's/\x1b\[[0-9;]*m//g' run.log"; // Note: the log name is hard coded here

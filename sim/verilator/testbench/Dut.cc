@@ -62,9 +62,11 @@ word_t Dut::reg_str2val(const char *s) {
 }
 
 void Dut::dump() {
-    if (m_trace) {
+#ifdef CONFIG_WAVE
+    if (m_trace && sim_time >= CONFIG_WAVE_START && sim_time <= CONFIG_WAVE_END) {
         m_trace->dump(sim_time);
     }
+#endif
 }
 
 void Dut::check() {

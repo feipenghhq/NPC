@@ -24,6 +24,8 @@ extern "C" {
     void update_device();
 }
 
+extern FILE *strace_fp;
+
 // ---------------------------------------------
 // Function prototype and global variable
 // ---------------------------------------------
@@ -44,12 +46,12 @@ Core_s::~Core_s() {
 }
 
 void Core_s::init_trace(const char *name, int level) {
+#ifdef CONFIG_WAVE
     Verilated::traceEverOn(true);
-    if (info->trace) {
-        m_trace = new VerilatedVcdC;
-        top->trace(m_trace, level);
-        m_trace->open(name);
-    }
+    m_trace = new VerilatedVcdC;
+    top->trace(m_trace, level);
+    m_trace->open(name);
+#endif
 }
 
 void Core_s::clk_tick() {
@@ -113,4 +115,9 @@ extern "C" {
         dpi_mem_access_pc = pc;
     }
 
+    void dpi_strace(int pc, int code) {
+        if (strace_fp) {
+            fprintf(strace_fp, "[Strace]: System call 0x%08x @PC 0x%08x\n", code, pc);
+        }
+    }
 }

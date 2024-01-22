@@ -33,7 +33,6 @@ typedef struct test_info {
     char *suite;    // test suite name
     char *test;     // test name
     char *dut;      // rtl top level
-    bool trace;     // dump the waveform
     char *elf;      // test elf file
     char *ref;      // Reference for difftest
 } test_info;
