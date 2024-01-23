@@ -121,6 +121,8 @@ module core_s #(
     // Select which source goes to rd
     assign rd_wdata = dec_mem_read ? mem_rd_wdata :
                       dec_csr_read ? csr_rdata :
+                      dec_mul ? mul_result :
+                      dec_div ? div_result :
                       exu_rd_wdata;
     assign csr_wdata = dec_csr_sel_imm ? dec_imm : rs1_rdata;
 
@@ -257,6 +259,7 @@ module core_s #(
         import "DPI-C" function void dpi_set_ebreak();
         import "DPI-C" function void dpi_pmem_read(input int pc, input int addr, output int rdata, input bit ifetch);
         import "DPI-C" function void dpi_pmem_write(input int pc, input int addr, input int data, input byte strb);
+        import "DPI-C" function void dpi_strace(input int pc, input int code);
 
         // set ebreak
         always @(posedge clk) begin
@@ -292,8 +295,15 @@ module core_s #(
                 dpi_pmem_read(pc, data_addr, data_rdata, 1'b0);
             end
         end
-    `endif
 
+        // scall trace
+        always @(posedge clk) begin
+            if (dec_ecall) begin
+                dpi_strace(pc, u_RegFile.regs[10]); // syscall type is in a0 register
+            end
+        end
+
+    `endif
 
 endmodule
 

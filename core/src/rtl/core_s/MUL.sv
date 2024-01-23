@@ -26,8 +26,8 @@ module MUL #(
     // -------------------------------------------
     // Signal definition
     // -------------------------------------------
-    logic              op1_sext;
-    logic              op2_sext;
+    logic              op1_usign;
+    logic              op2_usign;
     logic [XLEN:0]     op1_ext;
     logic [XLEN:0]     op2_ext;
     logic [2*XLEN+1:0] mul_result;
@@ -36,10 +36,10 @@ module MUL #(
     // Main logic
     // -------------------------------------------
 
-    assign op1_sext = &opcode;
-    assign op2_sext = ~opcode[0];
-    assign op1_ext = op1_sext ? {op1[XLEN-1], op1} : {1'b0, op1};
-    assign op2_ext = op2_sext ? {op2[XLEN-1], op2} : {1'b0, op2};
+    assign op1_usign = &opcode;
+    assign op2_usign = ~opcode[0];
+    assign op1_ext = op1_usign ? {1'b0, op1} : {op1[XLEN-1], op1};
+    assign op2_ext = op2_usign ? {1'b0, op2} : {op2[XLEN-1], op2};
 
     generate
     if (ARCH == 0) begin: single_cycle
