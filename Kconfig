@@ -14,7 +14,7 @@ endmenu
 menu "Simulation configuration"
 
 
-  menu "Trace and Debug"
+  menu "Trace"
 
   config ITRACE
     bool "Enable instruction trace."
@@ -30,9 +30,9 @@ menu "Simulation configuration"
     int "Instruction Ring buffer entry size"
     default 128
 
-  config IRINGBUF_LEN
+  config IRINGBUF_ENTRY
     depends on ITRACE
-    int "Instruction Ring buffer length"
+    int "Instruction Ring buffer entry"
     default 8
 
   config MTRACE
@@ -49,9 +49,9 @@ menu "Simulation configuration"
     int "Memory Ring buffer entry size"
     default 128
 
-  config MRINGBUF_LEN
+  config MRINGBUF_ENTRY
     depends on MTRACE
-    int "Memory Ring buffer length"
+    int "Memory Ring buffer entry"
     default 8
 
   config MTRACE_START
@@ -68,9 +68,43 @@ menu "Simulation configuration"
     bool "Enable function trace"
     default n
 
+  config FTRACE_WRITE_LOG
+    depends on FTRACE
+    bool "Write the function trace to a log file"
+    default n
+
+  config FRINGBUF_SIZE
+    depends on FTRACE
+    int "Function Ring buffer entry size"
+    default 256
+
+  config FRINGBUF_ENTRY
+    depends on FTRACE
+    int "Function Ring buffer entry"
+    default 8
+
   config STRACE
     bool "Enable system call trace"
     default n
+
+  config STRACE_WRITE_LOG
+    depends on STRACE
+    bool "Write the system call trace to a log file"
+    default n
+
+  config SRINGBUF_SIZE
+    depends on STRACE
+    int "System call trace Ring buffer entry size"
+    default 128
+
+  config SRINGBUF_ENTRY
+    depends on STRACE
+    int "System call Ring buffer entry"
+    default 8
+
+  endmenu
+
+  menu "Debug"
 
   config DIFFTEST
     bool "Enable difftest"
@@ -89,7 +123,6 @@ menu "Simulation configuration"
     depends on WAVE
     int "Wavefrom end cycle"
     default 1000
-
 
   endmenu
 

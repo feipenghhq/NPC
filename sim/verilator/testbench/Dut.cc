@@ -22,11 +22,13 @@
 extern "C" {
     int reg_str2id(const char *);
     const char *reg_id2str(int id);
-    void itrace_print();
-    void mtrace_print();
     void ref_exec(uint64_t n, word_t *dut_reg, word_t *dut_pc);
     bool difftest_compare(word_t *dut_reg, word_t dut_pc);
+    void init_trace(const char *elf);
+    void close_trace();
+    void print_trace();
     void itrace_write(word_t pc, word_t inst);
+    void ftrace_write(word_t pc, word_t nxtpc, word_t inst);
 }
 
 // ---------------------------------------------
@@ -86,12 +88,7 @@ bool Dut::report() {
         log_info_color("Test PASS!", ANSI_FG_GREEN);
     }
     else {
-    #ifdef CONFIG_ITRACE
-        itrace_print();
-    #endif
-    #ifdef CONFIG_MTRACE
-        mtrace_print();
-    #endif
+        print_trace();
         report_reg();
         log_err("Test FAIL!");
     }
@@ -121,7 +118,6 @@ void Dut::trace(word_t pc, word_t nxtpc, word_t inst) {
     itrace_write(pc, inst);
 #endif
 #ifdef CONFIG_FTRACE
-    void ftrace_write(word_t pc, word_t nxtpc, word_t inst);
     ftrace_write(pc, nxtpc, inst);
 #endif
 }

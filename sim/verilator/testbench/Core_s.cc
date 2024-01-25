@@ -21,6 +21,7 @@
 extern "C" {
     void paddr_write(word_t addr, word_t data, char strb);
     word_t paddr_read(word_t addr, bool ifetch);
+    void strace_write(word_t pc, word_t code);
     void update_device();
 }
 
@@ -116,8 +117,8 @@ extern "C" {
     }
 
     void dpi_strace(int pc, int code) {
-        if (strace_fp) {
-            fprintf(strace_fp, "[Strace]: System call 0x%08x @PC 0x%08x\n", code, pc);
-        }
+    #ifdef CONFIG_STRACE
+        strace_write(pc, code);
+    #endif
     }
 }

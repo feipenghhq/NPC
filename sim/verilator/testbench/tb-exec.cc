@@ -17,14 +17,11 @@
 // ------------------------------------
 
 extern "C" {
-    void itrace_init();
-    void itrace_close();
-    void mtrace_init();
-    void mtrace_close();
+    void init_trace(const char *elf);
+    void close_trace();
     void init_disasm();
     void init_device();
     size_t load_image(const char *img);
-    void init_ftrace(const char *elf);
     void init_difftest(char *ref, size_t mem_size);
 }
 
@@ -130,6 +127,8 @@ int parse_args(int argc, char *argv[]) {
  * Initialize the log files
  */
 static void init_log() {
+    log_fp = fopen(log_name, "w");
+    assert(log_fp);
 #ifdef CONFIG_ITRACE_WRITE_LOG
     itrace_fp = fopen(itrace_log, "w");
     Check(itrace_fp, "Failed to open %s", itrace_log);
@@ -138,7 +137,7 @@ static void init_log() {
     mtrace_fp = fopen(mtrace_log, "w");
     Check(mtrace_fp, "Failed to open %s", mtrace_log);
 #endif
-#ifdef CONFIG_FTRACE
+#ifdef CONFIG_FTRACE_WRITE_LOG
     ftrace_fp = fopen(ftrace_log, "w");
     Check(ftrace_fp, "Failed to open %s", ftrace_log);
 #endif
@@ -146,8 +145,6 @@ static void init_log() {
     strace_fp = fopen(strace_log, "w");
     Check(strace_fp, "Failed to open %s", strace_log);
 #endif
-    log_fp = fopen(log_name, "w");
-    assert(log_fp);
 }
 
 static void close_log() {
@@ -161,24 +158,6 @@ static void close_log() {
     int rc = system(cmd);
 }
 
-
-static void init_trace() {
-#ifdef CONFIG_ITRACE
-     itrace_init();
-#endif
-#ifdef CONFIG_MTRACE
-     mtrace_init();
-#endif
-}
-
-static void close_trace() {
-#ifdef CONFIG_ITRACE
-     itrace_close();
-#endif
-#ifdef CONFIG_MTRACE
-     mtrace_close();
-#endif
-}
 
 /**
  * Select and create different top based on the DUT
@@ -201,22 +180,14 @@ static Dut *select_dut(int argc, char *argv[], test_info *info) {
 int tb_exec(int argc, char *argv[]) {
 
     parse_args(argc, argv);
-
     init_log();
-    init_trace();
+    init_trace(info.elf);
     init_device();
     Dut *dut = select_dut(argc, argv, &info);
     size_t mem_size = load_image(info.image);
-#ifdef CONFIG_ITRACE
-    init_disasm();
-#endif
-#ifdef CONFIG_FTRACE
-    init_ftrace(info.elf);
-#endif
 #ifdef CONFIG_DIFFTEST
     init_difftest(info.ref, mem_size);
 #endif
-
     dut->init_trace("waveform.vcd", 99);
     dut->reset();
     dut->run(-1); // run till the end of the test

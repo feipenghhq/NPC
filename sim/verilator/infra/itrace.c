@@ -1,17 +1,15 @@
 // ------------------------------------------------------------------------------------------------
 // Copyright (c) 2023. Heqing Huang (feipenghhq@gmail.com)
 //
-// Project: NRC
 // Author: Heqing Huang
 // Date Created: 12/27/2023
+//
 // ------------------------------------------------------------------------------------------------
 // Itrace: Instruction trace
 // ------------------------------------------------------------------------------------------------
 
 #include <string.h>
-#include "config.h"
-#include "common.h"
-#include "ringbuf.h"
+#include "itrace.h"
 
 #ifdef CONFIG_ITRACE
 
@@ -19,20 +17,20 @@
 // Global Variable and Function prototype
 // ----------------------------------------------
 
+void init_disasm();
 extern FILE *itrace_fp;
-
 char *disasm(word_t *inst, word_t pc);
+static ringbuf *rb = NULL;
+
+#define MSG_LEN  CONFIG_IRINGBUF_SIZE
 
 // ----------------------------------------------
 // Instruction Trace
 // ----------------------------------------------
 
-#define MSG_LEN  128
-
-static ringbuf *rb = NULL;
-
 void itrace_init() {
-    rb = ringbuf_create(CONFIG_IRINGBUF_LEN, CONFIG_IRINGBUF_SIZE);
+    rb = ringbuf_create(CONFIG_IRINGBUF_ENTRY, CONFIG_IRINGBUF_SIZE);
+    init_disasm();
 }
 
 void itrace_close() {
@@ -41,7 +39,7 @@ void itrace_close() {
 
 void itrace_write(word_t pc, word_t inst) {
     char msg[MSG_LEN];
-    sprintf(msg, "0x%08x: 0x%08x%s", pc, inst, disasm(&inst, pc));
+    snprintf(msg, MSG_LEN, "0x%08x: 0x%08x%s", pc, inst, disasm(&inst, pc));
 #ifdef CONFIG_ITRACE_WRITE_LOG
     fprintf(itrace_fp, "%s\n", msg);
     fflush(itrace_fp);

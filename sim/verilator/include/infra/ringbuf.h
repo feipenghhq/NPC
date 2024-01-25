@@ -18,12 +18,12 @@ typedef struct ringbuf_node {
 typedef struct ringbuf {
     ringbuf_node *node;
     int size;       // size of each ring buffer entry
-    int len;        // length of the ring buffer (including null character)
+    int entry;      // ring buffer entry size
     int head;       // point to the current position of the ringbuf
 } ringbuf;
 
 
-ringbuf *ringbuf_create(int len, int size);
+ringbuf *ringbuf_create(int entry, int size);
 void ringbuf_delete(ringbuf *rb);
 void ringbuf_write(ringbuf *rb, char *str);
 void ringbuf_print(ringbuf *rb);

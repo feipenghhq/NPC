@@ -15,8 +15,7 @@
 #include <fcntl.h>
 #include <sys/mman.h>
 #include <assert.h>
-#include "common.h"
-#include "config.h"
+#include "ftrace.h"
 
 #ifdef CONFIG_FTRACE
 
@@ -25,6 +24,10 @@
 #define RS1(inst)     (((inst) & 0x000F8000) >> 15)
 #define JAL           0x6F
 #define JALR          0x67
+
+#define MSG_LEN       CONFIG_FRINGBUF_SIZE
+
+;
 
 // use a linked list data structure to store the function information
 struct func_info {
@@ -35,6 +38,7 @@ struct func_info {
 };
 
 extern FILE *ftrace_fp;
+static ringbuf *rb = NULL;
 static int level = 0;
 static char unknow[] = "???";
 static struct func_info *start = NULL;
@@ -42,8 +46,13 @@ static struct func_info *start = NULL;
 static void find_func_info(const char *);
 void print_func_info();
 
-void init_ftrace(const char *elf) {
+void ftrace_init(const char *elf) {
   find_func_info(elf);
+  rb = ringbuf_create(CONFIG_FRINGBUF_ENTRY, CONFIG_FRINGBUF_SIZE);
+}
+
+void ftrace_close() {
+    ringbuf_delete(rb);
 }
 
 /**
@@ -139,22 +148,32 @@ static bool is_func_ret(word_t inst) {
   return (rd == 0) && (rs1 == 1) && (opcode == JALR);
 }
 
-static void trace_func_call(word_t pc, word_t nxtpc, word_t inst) {
+static void trace_func_call(word_t pc, word_t nxtpc, word_t inst)  {
+  char msg[MSG_LEN];
   if (is_func_call(inst)) {
-    fprintf(ftrace_fp, "0x%x: ", pc);
-    for (int i = 0; i < level; i++) fprintf(ftrace_fp, "  ");
-    fprintf(ftrace_fp, "call [%s@0x%x]\n", find_func_name(nxtpc), nxtpc);
-    fflush(ftrace_fp);
+    int cnt = snprintf(msg, MSG_LEN, "0x%x: ", pc);
+    for (int i = 0; i < level; i++) cnt += snprintf(msg + cnt, MSG_LEN, "  ");
+    snprintf(msg + cnt, MSG_LEN, "call [%s@0x%x]", find_func_name(nxtpc), nxtpc);
+    #ifdef CONFIG_FTRACE_WRITE_LOG
+        fprintf(ftrace_fp, "%s\n", msg);
+        fflush(ftrace_fp);
+    #endif
+    ringbuf_write(rb, msg);
     level++;
   }
 }
 
-static void trace_func_ret(word_t pc, word_t nxtpc, word_t inst) {
+static void trace_func_ret(word_t pc, word_t nxtpc, word_t inst)  {
+  char msg[MSG_LEN];
   if (is_func_ret(inst)) {
-    fprintf(ftrace_fp, "0x%x: ", pc);
-    for (int i = 0; i < level; i++) fprintf(ftrace_fp, "  ");
-    fprintf(ftrace_fp, "ret [%s@0x%x]\n", find_func_name(nxtpc), nxtpc);
-    fflush(ftrace_fp);
+    int cnt = snprintf(msg, MSG_LEN, "0x%x: ", pc);
+    for (int i = 0; i < level; i++) cnt += snprintf(msg + cnt, MSG_LEN - cnt, "  ");
+    cnt += snprintf(msg + cnt, MSG_LEN - cnt, "ret [%s@0x%x]", find_func_name(nxtpc), nxtpc);
+    #ifdef CONFIG_FTRACE_WRITE_LOG
+        fprintf(ftrace_fp, "%s\n", msg);
+        fflush(ftrace_fp);
+    #endif
+    ringbuf_write(rb, msg);
     level--;
   }
 }
@@ -164,10 +183,17 @@ void ftrace_write(word_t pc, word_t nxtpc, word_t inst) {
   trace_func_ret(pc, nxtpc, inst);
 }
 
+void ftrace_print() {
+    Log("Function to error instruction (Dump from fringbuf):\n");
+    ringbuf_print(rb);
+}
+
 #undef OPCODE
 #undef RD
 #undef RS1
 #undef JAL
 #undef JALR
+
+#undef MSG_LEN
 
 #endif

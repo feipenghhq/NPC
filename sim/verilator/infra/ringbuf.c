@@ -16,15 +16,15 @@
 // Function
 // ----------------------------------------------
 
-ringbuf *ringbuf_create(int len, int size) {
+ringbuf *ringbuf_create(int entry, int size) {
     ringbuf *rb = (ringbuf *) malloc(sizeof(ringbuf));
     CheckMalloc(rb);
     rb->size = size;
-    rb->len = len;
-    rb->head = len - 1;
-    rb->node = (ringbuf_node *) malloc(len * sizeof(ringbuf_node));
+    rb->entry = entry;
+    rb->head = entry - 1;
+    rb->node = (ringbuf_node *) malloc(entry * sizeof(ringbuf_node));
     CheckMalloc(rb->node);
-    for (int i = 0; i < len; i++) {
+    for (int i = 0; i < entry; i++) {
         rb->node[i].buf = (char *) malloc(size * sizeof(char));
         CheckMalloc(rb->node[i].buf);
         rb->node[i].vld = false;
@@ -33,7 +33,7 @@ ringbuf *ringbuf_create(int len, int size) {
 }
 
 void ringbuf_delete(ringbuf *rb) {
-    for (int i = 0; i < rb->len; i++) {
+    for (int i = 0; i < rb->entry; i++) {
         free(rb->node[i].buf);
     }
     free(rb->node);
@@ -42,7 +42,7 @@ void ringbuf_delete(ringbuf *rb) {
 
 
 inline static void ringbuf_inc_wrap(ringbuf *rb) {
-    if (rb->head == (rb->len - 1)) {
+    if (rb->head == (rb->entry - 1)) {
         rb->head = 0;
     }
     else {
@@ -59,8 +59,8 @@ void ringbuf_write(ringbuf *rb, char *str) {
 }
 
 void ringbuf_print(ringbuf *rb) {
-    int curr = rb->head == (rb->len - 1) ? 0 : rb->head + 1; // point curr to the next location of head
-    for (; curr < rb->len; curr++)
+    int curr = rb->head == (rb->entry - 1) ? 0 : rb->head + 1; // point curr to the next location of head
+    for (; curr < rb->entry; curr++)
         if (rb->node[curr].vld) Log("     %s\n", rb->node[curr].buf);
     for (curr = 0; curr < rb->head; curr++)
         if (rb->node[curr].vld) Log("     %s\n", rb->node[curr].buf);
