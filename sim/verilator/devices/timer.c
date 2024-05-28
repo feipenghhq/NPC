@@ -11,7 +11,11 @@
 #include "config.h"
 
 #ifdef CONFIG_HAS_TIMER
+#ifdef CONFIG_TIMER_CLOCK_GETTIME
+#include <time.h>
+#else
 #include <sys/time.h>
+#endif
 #include "device.h"
 
 #define TIMER_SIZE 8
@@ -22,10 +26,18 @@ static const char name[] = "timer";
 static time_t start = 0;
 
 inline static time_t _get_usec() {
+#ifdef CONFIG_TIMER_CLOCK_GETTIME
+    struct timespec now;
+    clock_gettime(CLOCK_MONOTONIC_COARSE, &now);
+    uint64_t us = now.tv_sec * 1000000 + now.tv_nsec / 1000;
+    return us;
+#else
     struct timeval tv;
     int rc = gettimeofday(&tv, NULL);
     Check(rc == 0, "Failed to get time");
-    return tv.tv_sec * 1000000 + tv.tv_usec;
+    uint64_t us = tv.tv_sec * 1000000 + tv.tv_usec;
+    return us;
+#endif
 }
 
 void timer_callback(word_t addr, word_t data, bool is_write, byte_t *mmio) {
