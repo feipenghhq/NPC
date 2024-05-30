@@ -144,9 +144,10 @@ module CSR #(
     // ------------------------------------------
     // Machine Cause Register (mcause)
     // ------------------------------------------
-
     struct packed {
+        /* verilator lint_off SYMRSVDWORD */
         logic              interrupt;
+        /* verilator lint_on SYMRSVDWORD */
         logic [XLEN-2:0]   exception_code;
     } mcause;
 

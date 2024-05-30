@@ -7,7 +7,8 @@
 # ------------------------------------------------------------------------------------------------
 
 # path
-RTL_PATH = core/src/rtl
+REPO ?= $(shell git rev-parse --show-toplevel)
+RTL_PATH = $(REPO)/core/src/rtl
 
 # Verilog source file
 ifeq ($(TOP),core_s)

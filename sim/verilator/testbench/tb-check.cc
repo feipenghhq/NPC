@@ -16,7 +16,7 @@
 //variable
 // ---------------------------------------------
 
-#define ICS_AM_TEST "ics-am-test"
+#define ICS2023 "ics2023"
 
 extern bool dpi_ebreak;
 extern bool NRC_SDL_quit;
@@ -37,7 +37,7 @@ static bool ics_check_finish(Dut *top) {
  */
 bool check_finish(Dut *top, const char *suite) {
     if (NRC_SDL_quit) return true;
-    if (strcmp(suite, ICS_AM_TEST) == 0)
+    if (strcmp(suite, ICS2023) == 0)
         return ics_check_finish(top);
     assert(0);
 }
@@ -58,7 +58,7 @@ static bool ics_check_pass(Dut *top) {
  */
 bool check_pass(Dut *top, const char *suite) {
     if (NRC_SDL_quit) return true;
-    if (strcmp(suite, ICS_AM_TEST) == 0)
+    if (strcmp(suite, ICS2023) == 0)
         return ics_check_pass(top);
     assert(0);
 }

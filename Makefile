@@ -10,7 +10,8 @@
 # Directory
 #------------------------------------------------
 WORK_DIR  = $(shell git rev-parse --show-toplevel)
-MAKE_DIR  = $(WORK_DIR)/scripts/Makefile
+MAKE_DIR  = $(WORK_DIR)/scripts
+VERIL_DIR = $(WORK_DIR)/sim/verilator
 PWD_DIR   = $(PWD)
 
 #------------------------------------------------
@@ -21,19 +22,16 @@ FLOW ?= sim
 TOP  ?= core_s
 
 #------------------------------------------------
-# Include RTL filelist
-#------------------------------------------------
-include $(WORK_DIR)/core/src/rtl/filelist.mk
-
-#------------------------------------------------
 # Include flow makefile
 #------------------------------------------------
 
-#flow makefile
-include $(MAKE_DIR)/flow.$(FLOW).mk
-
 #kconfig flow
 include $(MAKE_DIR)/kconfig.mk
+
+#flow
+ifeq ($(FLOW), sim)
+include $(VERIL_DIR)/Makefile
+endif
 
 #------------------------------------------------
 # Clean

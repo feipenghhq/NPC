@@ -1,10 +1,16 @@
-# ------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------
 # Copyright (c) 2023. Heqing Huang (feipenghhq@gmail.com)
 #
 # Project: NRC
 # Author: Heqing Huang
-# Date Created: 01/01/2023
 # -----------------------------------------------------------------------------------------------
+
+# Add tests for ICS2023
+
+REPO = $(shell git rev-parse --show-toplevel)
+VERIL_DIR = $(REPO)/sim/verilator
+REF_SO = $(VERIL_DIR)/difftest/nemu/riscv32-nemu-interpreter-so
+include $(VERIL_DIR)/scripts/common.mk
 
 # Set the AM (Abstract Machine) directory path. AM is from NJU ICS lab
 ifeq ($(AM_KERNELS_HOME),)
@@ -16,10 +22,15 @@ ifeq ($(FCEUX_AM_HOME),)
 $(error "Please set FCEUX_AM_HOME to fceux-am path")
 endif
 
+# Set the NANOS_HOME directory path. NANOS_HOME is from NJU ICS lab
+ifeq ($(NANOS_HOME),)
+$(error "Please set NANOS_HOME to nanos-lite path")
+endif
+
 # Usage: $(call add_tests,name,target,path,maxlen)
 define add_tests
 $(1) = $(sort $(basename $(notdir $(shell find $(3) -name "*-npc.bin"))))
-$$($(1)): $(OBJECT) $(RESULT)
+$$($(1)): $(BUILD_DIR)/$(OBJECT) $(RESULT)
 	$(call run_sim,$(3)/build/$$@.bin,$(3)/build/$$@.elf,$(TEST_SUITES),$$@,$(TOP),$(4))
 $(2): $$($(1))
 	@cat $(RESULT)
@@ -48,4 +59,4 @@ $(eval $(call add_tests,BAD-APPLE,bad-apple,$(AM_KERNELS_HOME)/kernels/bad-apple
 $(eval $(call add_tests,FCEUX,fceux,$(FCEUX_AM_HOME),26))
 
 # nanos-lite
-$(eval $(call add_tests,NANOS-LITE,nanos-lite,$(NANOS_LITE_HOME),26))
+$(eval $(call add_tests,NANOS-LITE,nanos-lite,$(NANOS_HOME),26))
