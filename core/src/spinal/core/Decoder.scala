@@ -30,9 +30,8 @@ case class CpuCtrl(config: RiscCoreConfig) extends Bundle {
     val ebreak = Bool()
     val ecall = Bool()
     val aluSelPc = Bool()
-    val aluSelZero = Bool()
     val selImm = Bool()
-    val opcode = Bits(4 bits)
+    val opcode = Bits(5 bits)
     val rs1Addr = UInt(config.regidWidth bits)
     val rs2Addr = UInt(config.regidWidth bits)
     val immediate = config.xlenSInt
@@ -98,8 +97,7 @@ case class Decoder(config: RiscCoreConfig) extends Component {
     // funct7 is also used for instruction encoding but we didn't check it when generating the control
     // signal. This is a miss and may result into missing catching the illegal instruction exception
 
-    cpuCtrl.aluSelPc := jalType | auipcType
-    cpuCtrl.aluSelZero := luiType
+    cpuCtrl.aluSelPc := jalType | auipcType | branchType
     cpuCtrl.selImm := jalType | jalrType | branchType | luiType | auipcType | iType | loadType | storeType
 
     cpuCtrl.rdWrite := luiType | auipcType | jalType | jalrType | iType | rType | loadType
@@ -110,12 +108,13 @@ case class Decoder(config: RiscCoreConfig) extends Component {
     cpuCtrl.ebreak := systemType & (instruction(31 downto 7) === B"25'x2000")
     cpuCtrl.ecall := systemType & (instruction(31 downto 7) === B"25'x0" )
 
-    // Some logic/module need opcode/additional info to tell which instruction/operation it is.
-    // Most of the instruction use funct3 to distinguish the instruction with the same opcode such as I-type and R-type
-    // So we can just use funct3 as the opcode for these operation. These module/operation include ALU/Branch/Memory
-    // However for ALU, we need one additional bit to distinguish add/sub, srl(i)/sra(i), observing the instruction
-    // coding we can find out that instruction bit 30 is used to for this
-    cpuCtrl.opcode := instruction(30) ## funct3
+    // opcode(2 downto 0): same encoding as funct3 or add for some instruction
+    // opcode(3): distinguish add/sub, srl(i)/sra(i) same as instruction[30]
+    // opcode(4): lui instruction for ALU
+    val opcodeAdd = branchType | luiType | auipcType | jalType | jalrType | loadType | storeType
+    cpuCtrl.opcode(2 downto 0) := Mux(opcodeAdd, B"000", funct3)
+    cpuCtrl.opcode(3) := Mux(opcodeAdd, False, instruction(30))
+    cpuCtrl.opcode(4) := luiType
 
     //-----------------------------------
     // generate control signal for ISA extension

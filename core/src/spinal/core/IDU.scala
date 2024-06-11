@@ -22,6 +22,7 @@ case class IduBundle(config: RiscCoreConfig) extends Bundle {
     val cpuCtrl = CpuCtrl(config)
     val rs1Data = config.xlenBits
     val rs2Data = config.xlenBits
+    val pc = config.xlenUInt
 }
 
 case class IDU(config: RiscCoreConfig) extends Component {
@@ -37,8 +38,9 @@ case class IDU(config: RiscCoreConfig) extends Component {
         rs1Data = io.iduData.payload.rs1Data,
         rs2Data = io.iduData.payload.rs2Data)
 
-    io.ifuData.ready := io.iduData.ready
-    io.iduData.valid := io.ifuData.valid
+    io.ifuData.ready <> io.iduData.ready
+    io.iduData.valid <> io.ifuData.valid
+    io.iduData.payload.pc <> io.ifuData.payload.pc
 }
 
 object IDUVerilog extends App {
