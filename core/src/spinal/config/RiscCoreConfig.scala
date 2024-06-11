@@ -17,9 +17,14 @@ import spinal.core._
 case class RiscCoreConfig(
     xlen: Int,
     pcRstVector: Int,
-    nreg: Int
+    nreg: Int = 32,
+    hasRv32M: Boolean = false,
+    hasZicsr: Boolean = false
 ) {
-    def xlenUInt = UInt(xlen bit)
-    def xlenBits = Bits(xlen bit)
     def regidWidth = log2Up(nreg)
+
+    def xlenBits = Bits(xlen bit)
+    def xlenUInt = UInt(xlen bit)
+    def xlenSInt = SInt(xlen bit)
+    def regidUInt = UInt(regidWidth bit)
 }

@@ -61,6 +61,14 @@ case class IFU(config: RiscCoreConfig) extends Component {
     io.ibus.addr := pc
 }
 
+object IFU {
+    def apply(config: RiscCoreConfig, ibus: IbusBundle): IFU = {
+        val ifu = IFU(config)
+        ifu.io.ibus <> ibus
+        ifu
+    }
+}
+
 object IFUVerilog extends App {
     val config = RiscCoreConfig(32, 0x00000000, 32)
     Config.spinal.generateVerilog(IFU(config))
