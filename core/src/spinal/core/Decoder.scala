@@ -6,7 +6,7 @@
  * Date Created: 6/9/2024
  *
  * ------------------------------------------------------------------------------------------------
- * Decoder Instruction Decode Unit
+ * Decoder: Instruction Decode Unit
  * ------------------------------------------------------------------------------------------------
  * Decode the Instruction into different cpu control signal
  * ------------------------------------------------------------------------------------------------
@@ -173,10 +173,11 @@ case class Decoder(config: RiscCoreConfig) extends Component {
 }
 
 object Decoder {
-    def apply(config: RiscCoreConfig, ifuData: Flow[IfuBundle], cpuCtrl: Flow[CpuCtrl]): Decoder = {
+    def apply(config: RiscCoreConfig, ifuData: Stream[IfuBundle], cpuCtrl: CpuCtrl): Decoder = {
         val decoder = Decoder(config)
-        decoder.io.ifuData <> ifuData
-        decoder.io.cpuCtrl <> cpuCtrl
+        decoder.io.ifuData.valid := ifuData.valid
+        decoder.io.ifuData.payload <> ifuData.payload
+        decoder.io.cpuCtrl.payload <> cpuCtrl
         decoder
     }
 }
