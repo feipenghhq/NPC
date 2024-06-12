@@ -22,6 +22,7 @@ case class RiscCoreConfig(
     hasZicsr: Boolean = false
 ) {
     def regidWidth = log2Up(nreg)
+    def nbyte = xlen / 8
 
     def xlenBits = Bits(xlen bit)
     def xlenUInt = UInt(xlen bit)

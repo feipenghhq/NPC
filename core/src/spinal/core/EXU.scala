@@ -20,6 +20,7 @@ case class EXU(config: RiscCoreConfig) extends Component {
         val iduData = slave Stream(IduBundle(config))
         val rdWrCtrl = master Flow(RdWrCtrl(config))
         val branchCtrl = master Flow(config.xlenUInt)
+        val dbus = master(DbusBundle(config))
     }
 
     val iduData = io.iduData.payload
@@ -53,11 +54,22 @@ case class EXU(config: RiscCoreConfig) extends Component {
     uBeu.io.branchCtrl <> io.branchCtrl
 
     // ----------------------------
+    // MEU
+    // ----------------------------
+    val uMeu = MEU(config)
+    io.dbus <> uMeu.io.dbus
+    uMeu.io.memRead <> cpuCtrl.memRead
+    uMeu.io.memWrite <> cpuCtrl.memWrite
+    uMeu.io.opcode <> cpuCtrl.opcode
+    uMeu.io.addr <> aluAddRes
+    uMeu.io.wdata <> io.iduData.rs2Data
+
+    // ----------------------------
     // Register Write Back
     // ----------------------------
     io.rdWrCtrl.payload.addr <> cpuCtrl.rdAddr
-    io.rdWrCtrl.payload.data <> aluRes
     io.rdWrCtrl.valid <> cpuCtrl.rdWrite
+    io.rdWrCtrl.payload.data := Mux(cpuCtrl.memRead, uMeu.io.rdata, aluRes)
 }
 
 
