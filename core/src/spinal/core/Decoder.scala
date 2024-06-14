@@ -39,23 +39,28 @@ case class CpuCtrl(config: RiscCoreConfig) extends Bundle {
     // RV32M
     val muldiv = config.hasRv32M generate Bool()
     // Zicsr
-    val csrWrite = config.hasZicsr generate Bool()
-    val csrSet = config.hasZicsr generate Bool()
-    val csrClear = config.hasZicsr generate Bool()
-    val csrRead = config.hasZicsr generate Bool()
-    val csrAddr = config.hasZicsr generate UInt(12 bits)
+}
+
+case class CsrCtrl(config: RiscCoreConfig) extends Bundle {
+    val write =  Bool()
+    val set = Bool()
+    val clear = Bool()
+    val read = Bool()
+    val addr = UInt(12 bits)
 }
 
 case class Decoder(config: RiscCoreConfig) extends Component {
     val io = new Bundle {
         val ifuData = slave Flow(IfuBundle(config))
         val cpuCtrl = master Flow(CpuCtrl(config))
+        val csrCtrl = config.hasZicsr generate master Flow(CsrCtrl(config))
     }
     noIoPrefix()
 
     // alias some path
     val instruction = io.ifuData.payload.instruction
     val cpuCtrl = io.cpuCtrl.payload
+    val csrCtrl = io.csrCtrl.payload
 
     // handshake signal
     io.cpuCtrl.valid := io.ifuData.valid
@@ -136,11 +141,11 @@ case class Decoder(config: RiscCoreConfig) extends Component {
         val csrrs = systemType & (funct3(2 downto 0) === 2)
         val csrrc = systemType & (funct3(2 downto 0) === 3)
 
-        cpuCtrl.csrWrite := csrrw
-        cpuCtrl.csrSet := csrrs & csrWrite
-        cpuCtrl.csrClear := csrrc & csrWrite
-        cpuCtrl.csrRead := csrrw & csrRead | csrrs | csrrc
-        cpuCtrl.csrAddr := instruction(31 downto 20).asUInt
+        csrCtrl.write := csrrw
+        csrCtrl.set := csrrs & csrWrite
+        csrCtrl.clear := csrrc & csrWrite
+        csrCtrl.read := csrrw & csrRead | csrrs | csrrc
+        csrCtrl.addr := instruction(31 downto 20).asUInt
     }
 
     //-----------------------------------
