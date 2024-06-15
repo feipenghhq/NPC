@@ -20,6 +20,7 @@ import config._
 
 case class IduBundle(config: RiscCoreConfig) extends Bundle {
     val cpuCtrl = CpuCtrl(config)
+    val csrCtrl = CsrCtrl(config)
     val rs1Data = config.xlenBits
     val rs2Data = config.xlenBits
     val pc = config.xlenUInt
@@ -32,15 +33,27 @@ case class IDU(config: RiscCoreConfig) extends Component {
         val rdWrCtrl = slave Flow(RdWrCtrl(config))
     }
 
-    val dec = Decoder(config, io.ifuData, io.iduData.cpuCtrl)
-
-    val rf = RegisterFile(config, io.iduData.payload.cpuCtrl, io.rdWrCtrl,
-        rs1Data = io.iduData.payload.rs1Data,
-        rs2Data = io.iduData.payload.rs2Data)
-
+    // --------------------------------
+    // Handshake
+    // --------------------------------
     io.ifuData.ready <> io.iduData.ready
     io.iduData.valid <> io.ifuData.valid
     io.iduData.payload.pc <> io.ifuData.payload.pc
+
+    // --------------------------------
+    // Module instantiation
+    // --------------------------------
+    val dec = Decoder(config)
+    dec.io.ifuData <> io.ifuData.payload
+    dec.io.cpuCtrl <> io.iduData.payload.cpuCtrl
+    dec.io.csrCtrl <> io.iduData.payload.csrCtrl
+
+    val rf = RegisterFile(config)
+    rf.io.rs1Addr <> dec.io.cpuCtrl.rs1Addr
+    rf.io.rs2Addr <> dec.io.cpuCtrl.rs2Addr
+    rf.io.rs1Data <> io.iduData.payload.rs1Data
+    rf.io.rs2Data <> io.iduData.payload.rs2Data
+    rf.io.rdWrCtrl <> io.rdWrCtrl
 }
 
 object IDUVerilog extends App {

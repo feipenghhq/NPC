@@ -35,9 +35,9 @@ case class IbusBundle(config: RiscCoreConfig) extends Bundle with IMasterSlave {
 
 case class IFU(config: RiscCoreConfig) extends Component {
     val io = new Bundle {
-        val branchCtrl = slave Flow(config.xlenUInt)       // branch control
-        val trapCtrl = slave Flow(config.xlenUInt)         // trap control
-        val ifuData = master Stream(IfuBundle(config))    // ifu output data
+        val ifuData = master Stream(IfuBundle(config))
+        val branchCtrl = slave Flow(config.xlenUInt)
+        val trapCtrl = slave Flow(config.xlenUInt)
         val ibus = master(IbusBundle(config))
     }
     noIoPrefix()

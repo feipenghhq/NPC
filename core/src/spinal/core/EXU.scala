@@ -20,19 +20,26 @@ case class EXU(config: RiscCoreConfig) extends Component {
         val iduData = slave Stream(IduBundle(config))
         val rdWrCtrl = master Flow(RdWrCtrl(config))
         val branchCtrl = master Flow(config.xlenUInt)
+        val trapCtrl = master Flow(config.xlenUInt)
         val dbus = master(DbusBundle(config))
     }
 
+    // path alias
     val iduData = io.iduData.payload
     val cpuCtrl = iduData.cpuCtrl
+    val csrCtrl = iduData.csrCtrl
+    val immediate = cpuCtrl.immediate.asBits
 
+    // ----------------------------
+    // Handshake
+    // ----------------------------
     io.iduData.ready := True
 
     // ----------------------------
     // ALU
     // ----------------------------
     val aluSrc1 = Mux(cpuCtrl.aluSelPc, iduData.pc.asBits, iduData.rs1Data)
-    val aluSrc2 = Mux(cpuCtrl.selImm, cpuCtrl.immediate.asBits, iduData.rs2Data)
+    val aluSrc2 = Mux(cpuCtrl.selImm,   immediate,         iduData.rs2Data)
 
     val uAlu = ALU(config)
     uAlu.io.opcode <> cpuCtrl.opcode
@@ -65,11 +72,31 @@ case class EXU(config: RiscCoreConfig) extends Component {
     uMeu.io.wdata <> io.iduData.rs2Data
 
     // ----------------------------
+    // CSR
+    // ----------------------------
+    val uCSR = CSR(config)
+    uCSR.io.csrCtrl <> csrCtrl
+    uCSR.io.csrWdata <> Mux(cpuCtrl.selImm, immediate, io.iduData.payload.rs1Data)
+
+    // ----------------------------
+    // TrapCtrl
+    // ----------------------------
+    val uTrapCtrl = TrapCtrl(config)
+    uTrapCtrl.io.csrRdPort <> uCSR.io.csrRdPort
+    uTrapCtrl.io.csrWrPort <> uCSR.io.csrWrPort
+    uTrapCtrl.io.ecall <> cpuCtrl.ecall
+    uTrapCtrl.io.mret <> cpuCtrl.mret
+    uTrapCtrl.io.trapCtrl <> io.trapCtrl
+    uTrapCtrl.io.trap <> uCSR.io.trap
+    uTrapCtrl.io.pc <> io.iduData.pc
+
+    // ----------------------------
     // Register Write Back
     // ----------------------------
     io.rdWrCtrl.payload.addr <> cpuCtrl.rdAddr
     io.rdWrCtrl.valid <> cpuCtrl.rdWrite
-    io.rdWrCtrl.payload.data := Mux(cpuCtrl.memRead, uMeu.io.rdata, aluRes)
+    io.rdWrCtrl.payload.data := Mux(csrCtrl.read, uCSR.io.csrRdata,
+                                Mux(cpuCtrl.memRead, uMeu.io.rdata, aluRes))
 }
 
 

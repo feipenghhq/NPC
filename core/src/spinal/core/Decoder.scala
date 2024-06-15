@@ -29,16 +29,14 @@ case class CpuCtrl(config: RiscCoreConfig) extends Bundle {
     val memWrite = Bool()
     val ebreak = Bool()
     val ecall = Bool()
+    val mret  = Bool()
     val aluSelPc = Bool()
     val selImm = Bool()
     val opcode = Bits(5 bits)
     val rs1Addr = UInt(config.regidWidth bits)
     val rs2Addr = UInt(config.regidWidth bits)
     val immediate = config.xlenSInt
-    // Optional based on ISA extension
-    // RV32M
-    val muldiv = config.hasRv32M generate Bool()
-    // Zicsr
+    val muldiv = Bool()
 }
 
 case class CsrCtrl(config: RiscCoreConfig) extends Bundle {
@@ -51,19 +49,16 @@ case class CsrCtrl(config: RiscCoreConfig) extends Bundle {
 
 case class Decoder(config: RiscCoreConfig) extends Component {
     val io = new Bundle {
-        val ifuData = slave Flow(IfuBundle(config))
-        val cpuCtrl = master Flow(CpuCtrl(config))
-        val csrCtrl = config.hasZicsr generate master Flow(CsrCtrl(config))
+        val ifuData = in  port IfuBundle(config)
+        val cpuCtrl = out port CpuCtrl(config)
+        val csrCtrl = out port CsrCtrl(config)
     }
     noIoPrefix()
 
     // alias some path
-    val instruction = io.ifuData.payload.instruction
-    val cpuCtrl = io.cpuCtrl.payload
-    val csrCtrl = io.csrCtrl.payload
-
-    // handshake signal
-    io.cpuCtrl.valid := io.ifuData.valid
+    val instruction = io.ifuData.instruction
+    val cpuCtrl = io.cpuCtrl
+    val csrCtrl = io.csrCtrl
 
     // register address
     cpuCtrl.rdAddr  := instruction(11 downto 7).asUInt
@@ -112,6 +107,7 @@ case class Decoder(config: RiscCoreConfig) extends Component {
     cpuCtrl.memWrite := storeType
     cpuCtrl.ebreak := systemType & (instruction(31 downto 7) === B"25'x2000")
     cpuCtrl.ecall := systemType & (instruction(31 downto 7) === B"25'x0" )
+    cpuCtrl.mret := systemType & (instruction(31 downto 7) === B"25'x604000")
 
     // opcode(2 downto 0): same encoding as funct3 or add for some instruction
     // opcode(3): distinguish add/sub, srl(i)/sra(i) same as instruction[30]
@@ -174,16 +170,6 @@ case class Decoder(config: RiscCoreConfig) extends Component {
     val immValue = Vec(iTypeImmVal, uTypeImmVal, jTypeImmVal, sTypeImmVal, bTypeImmVal, cTypeImmVal)
 
     cpuCtrl.immediate := OHMux(immSel, immValue)
-}
-
-object Decoder {
-    def apply(config: RiscCoreConfig, ifuData: Stream[IfuBundle], cpuCtrl: CpuCtrl): Decoder = {
-        val decoder = Decoder(config)
-        decoder.io.ifuData.valid := ifuData.valid
-        decoder.io.ifuData.payload <> ifuData.payload
-        decoder.io.cpuCtrl.payload <> cpuCtrl
-        decoder
-    }
 }
 
 object DecoderVerilog extends App {

@@ -17,8 +17,8 @@ import spinal.lib._
 import config._
 
 case class RdWrCtrl(config: RiscCoreConfig) extends Bundle {
-    val addr  = in port config.regidUInt
-    val data  = in port config.xlenBits
+    val addr  = config.regidUInt
+    val data  = config.xlenBits
 }
 
 case class RegisterFile(config: RiscCoreConfig) extends Component {
@@ -39,18 +39,6 @@ case class RegisterFile(config: RiscCoreConfig) extends Component {
 
     io.rs1Data := register.readAsync(io.rs1Addr)
     io.rs2Data := register.readAsync(io.rs2Addr)
-}
-
-object RegisterFile {
-    def apply(config: RiscCoreConfig, cpuCtrl: CpuCtrl, rdWrCtrl: Flow[RdWrCtrl], rs1Data: Bits, rs2Data: Bits): RegisterFile = {
-        val rf = RegisterFile(config)
-        rf.io.rs1Addr := cpuCtrl.rs1Addr
-        rf.io.rs2Addr := cpuCtrl.rs2Addr
-        rf.io.rdWrCtrl <> rdWrCtrl
-        rf.io.rs1Data <> rs1Data
-        rf.io.rs2Data <> rs2Data
-        rf
-    }
 }
 
 object RegisterFileVerilog extends App {

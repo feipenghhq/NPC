@@ -29,7 +29,7 @@ case class CsrRdPort(config: RiscCoreConfig) extends Bundle {
 
 case class CSR(config: RiscCoreConfig) extends Component {
     val io = new Bundle {
-        val csrCtrl = slave Flow(CsrCtrl(config))
+        val csrCtrl = in port CsrCtrl(config)
         val csrWdata = in port config.xlenBits
         val csrRdata = out port config.xlenBits
         val trap = in port Bool()
@@ -39,7 +39,7 @@ case class CSR(config: RiscCoreConfig) extends Component {
     noIoPrefix()
 
     // signal alias
-    val csrCtrl = io.csrCtrl.payload
+    val csrCtrl = io.csrCtrl
     val trap = io.trap
     val rdPort = io.csrRdPort
     val wrPort = io.csrWrPort
