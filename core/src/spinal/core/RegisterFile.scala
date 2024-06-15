@@ -30,15 +30,18 @@ case class RegisterFile(config: RiscCoreConfig) extends Component {
         val rdWrCtrl = slave Flow(RdWrCtrl(config))
     }
 
-    val register = Mem(config.xlenBits, config.nreg)
+    val rdWrCtrl = io.rdWrCtrl.payload
 
-    register.write(
+    val regs = Mem(config.xlenBits, config.nreg)
+    regs.setName("regs")
+
+    regs.write(
         address = io.rdWrCtrl.payload.addr,
         data = io.rdWrCtrl.payload.data,
         enable = io.rdWrCtrl.valid)
 
-    io.rs1Data := register.readAsync(io.rs1Addr)
-    io.rs2Data := register.readAsync(io.rs2Addr)
+    io.rs1Data := Mux(io.rs1Addr === 0, B(0, config.xlen bits), regs.readAsync(io.rs1Addr))
+    io.rs2Data := Mux(io.rs2Addr === 0, B(0, config.xlen bits), regs.readAsync(io.rs2Addr))
 }
 
 object RegisterFileVerilog extends App {
