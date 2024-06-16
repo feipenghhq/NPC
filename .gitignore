@@ -3,3 +3,5 @@ output
 ..config*
 include/generated
 include/config
+.vscode
+.metals

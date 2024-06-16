@@ -6,31 +6,32 @@
  * Date Created: 12/19/2023
  *
  * ------------------------------------------------------------------------------------------------
- *  Core_s class: Provide environment for Core_s CPU design
+ *  CoreN class: Provide environment for CoreN CPU design
  * ------------------------------------------------------------------------------------------------
  */
 
-#ifndef __CORE_S_H__
-#define __CORE_S_H__
+#ifndef __CORE_N_H__
+#define __CORE_N_H__
 
 #include <verilated.h>
 #include <verilated_vcd_c.h>
-#include "Vcore_s.h"
-#include "Vcore_s_core_s.h"
-#include "Vcore_s_RegFile.h"
-#include "Vcore_s_IFU__P80000000.h"
-#include "Vcore_s__Dpi.h"
+#include "VCoreN.h"
+#include "VCoreN_CoreN.h"
+#include "VCoreN_IFU.h"
+#include "VCoreN_IDU.h"
+#include "VCoreN_RegisterFile.h"
+#include "VCoreN__Dpi.h"
 #include "Dut.h"
 
-class Core_s: public Dut {
+class CoreN: public Dut {
 
 private:
-    Vcore_s *top;
+    VCoreN *top;
     int reset_cycle = 10;
 
 public:
-    Core_s(int argc, char *argv[], const test_info *info);
-    ~Core_s();
+    CoreN(int argc, char *argv[], const test_info *info);
+    ~CoreN();
 
     virtual void init_trace(const char *name, int level);
     virtual void reset();

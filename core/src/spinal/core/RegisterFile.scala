@@ -15,6 +15,7 @@ package core
 import spinal.core._
 import spinal.lib._
 import config._
+import spinal.core.Verilator.public
 
 case class RdWrCtrl(config: RiscCoreConfig) extends Bundle {
     val addr  = config.regidUInt
@@ -34,6 +35,7 @@ case class RegisterFile(config: RiscCoreConfig) extends Component {
 
     val regs = Mem(config.xlenBits, config.nreg)
     regs.setName("regs")
+    regs.addAttribute(public)
 
     regs.write(
         address = io.rdWrCtrl.payload.addr,

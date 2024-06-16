@@ -17,6 +17,7 @@ package core
 import spinal.core._
 import spinal.lib._
 import config._
+import spinal.core.Verilator.public
 
 case class IfuBundle(config: RiscCoreConfig) extends Bundle {
     val pc = config.xlenUInt
@@ -43,7 +44,14 @@ case class IFU(config: RiscCoreConfig) extends Component {
     noIoPrefix()
 
     val nextPC = config.xlenUInt
+    nextPC.addAttribute(public)
+
     val pc = RegNext(nextPC) init (config.pcRstVector)
+    pc.addAttribute(public)
+
+    val instruction = config.xlenBits
+    instruction.addAttribute(public)
+    instruction := io.ibus.data
 
     when(io.trapCtrl.valid) {
         nextPC := io.trapCtrl.payload
@@ -56,9 +64,10 @@ case class IFU(config: RiscCoreConfig) extends Component {
     io.ifuData.valid := True
 
     io.ifuData.pc := pc
-    io.ifuData.instruction := io.ibus.data
+    io.ifuData.instruction := instruction
 
     io.ibus.addr := pc
+
 }
 
 object IFU {

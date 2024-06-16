@@ -22,26 +22,22 @@ case class CoreN(config: RiscCoreConfig) extends Component {
     val dbus = DbusBundle(config)
     noIoPrefix()
 
-    val uIfu = IFU(config)
-    val uIdu = IDU(config)
-    val uExu = EXU(config)
-    val uRegisterFile = RegisterFile(config)
+    val uIFU = IFU(config)
+    val uIDU = IDU(config)
+    val uEXU = EXU(config)
 
-    uIfu.io.branchCtrl <> uExu.io.branchCtrl
-    uIfu.io.ibus <> ibus
-    uIfu.io.trapCtrl <> uExu.io.trapCtrl
+    uIFU.io.branchCtrl <> uEXU.io.branchCtrl
+    uIFU.io.ibus <> ibus
+    uIFU.io.trapCtrl <> uEXU.io.trapCtrl
 
-    uIdu.io.ifuData <> uIfu.io.ifuData
-    uIdu.io.rdWrCtrl <> uExu.io.rdWrCtrl
+    uIDU.io.ifuData <> uIFU.io.ifuData
+    uIDU.io.rdWrCtrl <> uEXU.io.rdWrCtrl
 
-    uExu.io.iduData <> uIdu.io.iduData
-    uExu.io.dbus <> dbus
+    uEXU.io.iduData <> uIDU.io.iduData
+    uEXU.io.dbus <> dbus
 
-    uRegisterFile.io.rs1Addr <> uIdu.io.iduData.payload.cpuCtrl.rs1Addr
-    uRegisterFile.io.rs2Addr <> uIdu.io.iduData.payload.cpuCtrl.rs2Addr
-    uRegisterFile.io.rdWrCtrl <> uExu.io.rdWrCtrl
 
-    val iduData = uIdu.io.iduData.payload
+    val iduData = uIDU.io.iduData.payload
     val uCoreNDPI = CoreNDPI(config)
     uCoreNDPI.io.ebreak := iduData.cpuCtrl.ebreak
     uCoreNDPI.io.ecall := iduData.cpuCtrl.ecall
@@ -56,6 +52,6 @@ case class CoreN(config: RiscCoreConfig) extends Component {
 }
 
 object CoreNVerilog extends App {
-    val config = RiscCoreConfig(32, 0x00000000, 32, hasRv32M = true, hasZicsr = true)
-    Config.spinal.generateVerilog(CoreN(config))
+    val config = RiscCoreConfig(32, 0x80000000L, 32, hasRv32M = true, hasZicsr = true)
+    Config.spinal.generateVerilog(CoreN(config)).printPruned()
 }

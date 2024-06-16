@@ -38,6 +38,6 @@ case class CoreNDPI (config: RiscCoreConfig) extends BlackBox {
   }
 
   noIoPrefix()
-  mapClockDomain(clock = io.clk, reset = io.rst_b)
+  mapClockDomain(clock = io.clk, reset = io.rst_b, resetActiveLevel = LOW)
 }
 

@@ -8,13 +8,14 @@
 
 # path
 REPO ?= $(shell git rev-parse --show-toplevel)
-RTL_PATH = $(REPO)/core/src/rtl
+RTL_PATH = $(REPO)/core
+GEN_PATH = $(RTL_PATH)/src/gen
 
 # Verilog source file
-ifeq ($(TOP),core_s)
-VERILOG_SRCS += $(wildcard $(RTL_PATH)/core_s/*.sv $(RTL_PATH)/core_s/*.v)
+ifeq ($(TOP),CoreN)
+VERILOG_SRCS += $(RTL_PATH)/src/gen/CoreN.v
+VERILOG_SRCS += $(RTL_PATH)/src/verilog/core/CoreNDPI.sv
 endif
 
-# Verilog include directory
-VERILOG_INCS += $(RTL_PATH)/include
-
+$(GEN_PATH)/CoreN.v:
+	cd $(RTL_PATH) && sbt "runMain core.CoreNVerilog"

@@ -73,9 +73,9 @@ $(BUILD_DIR)/%.o: %.c $(C_HDRS)
 ## RTL source files CPP source files
 ## --------------------------------------------------------
 
-TOP ?= core_s
+TOP ?= CoreN
 
-include $(REPO)/core/src/rtl/filelist.mk
+include $(REPO)/core/src/filelist.mk
 
 RTL_SRCS += $(VERILOG_SRCS)
 RTL_SRCS += $(addprefix -I,$(VERILOG_INCS))

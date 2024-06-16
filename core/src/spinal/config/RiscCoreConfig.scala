@@ -16,7 +16,7 @@ import spinal.core._
 
 case class RiscCoreConfig(
     xlen: Int,
-    pcRstVector: Int,
+    pcRstVector: BigInt = 0x80000000L, // Need to add L here: https://github.com/SpinalHDL/SpinalHDL/issues/1420
     nreg: Int = 32,
     hasRv32M: Boolean = false,
     hasZicsr: Boolean = false

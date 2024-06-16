@@ -77,6 +77,7 @@ case class Decoder(config: RiscCoreConfig) extends Component {
     val phase3 = phase === 3
 
     // Decode the instruction based on different opcode type
+    // FIXME: Need to add phase3
     val luiType = opcode === B"01101"
     val auipcType = opcode === B"00101"
     val jalType = opcode === B"11011"
