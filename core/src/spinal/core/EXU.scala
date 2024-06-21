@@ -49,6 +49,14 @@ case class EXU(config: RiscCoreConfig) extends Component {
     val aluAddRes = uAlu.io.addResult
 
     // ----------------------------
+    // MulDiv
+    // ----------------------------
+    val uMulDiv = MulDiv(config)
+    uMulDiv.io.opcode <> cpuCtrl.opcode
+    uMulDiv.io.src1 <> aluSrc1
+    uMulDiv.io.src2 <> aluSrc2
+
+    // ----------------------------
     // BEU
     // ----------------------------
     val uBeu = BEU(config)
@@ -99,7 +107,8 @@ case class EXU(config: RiscCoreConfig) extends Component {
     io.rdWrCtrl.payload.data := Mux(csrCtrl.read,    uCSR.io.csrRdata,
                                 Mux(cpuCtrl.memRead, uMeu.io.rdata,
                                 Mux(cpuCtrl.jump,    pcPlus4.asBits,
-                                                     aluRes.asBits)))
+                                Mux(cpuCtrl.muldiv,  uMulDiv.io.result.asBits,
+                                                     aluRes.asBits))))
 }
 
 
