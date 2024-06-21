@@ -32,6 +32,7 @@ case class IDU(config: RiscCoreConfig) extends Component {
         val iduData = master Stream(IduBundle(config))
         val rdWrCtrl = slave Flow(RdWrCtrl(config))
     }
+    noIoPrefix()
 
     // --------------------------------
     // Handshake

@@ -30,6 +30,7 @@ case class RegisterFile(config: RiscCoreConfig) extends Component {
         val rs2Data = out port config.xlenBits
         val rdWrCtrl = slave Flow(RdWrCtrl(config))
     }
+    noIoPrefix()
 
     val rdWrCtrl = io.rdWrCtrl.payload
 

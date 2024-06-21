@@ -20,7 +20,7 @@ case class BEU(config: RiscCoreConfig) extends Component {
     val io = new Bundle {
         val branch = in port Bool()
         val jump = in port Bool()
-        val opcode = in port Bits(5 bits)
+        val opcode = in port Bits(3 bits)
         val src1 = in port config.xlenBits
         val src2 = in port config.xlenBits
         val addr = in port config.xlenUInt // branch/jump target address comes from ALU
@@ -34,7 +34,7 @@ case class BEU(config: RiscCoreConfig) extends Component {
 
     val test = io.src1.asUInt -^ io.src2.asUInt
     val eq = (test === 0)
-    val ltu = ~test.msb
+    val ltu = test.msb
     val lt = (io.src1.msb & ~io.src2.msb) | (~(io.src1.msb ^ io.src2.msb)) & test(config.xlen-1)
 
     val beq  = io.opcode(2 downto 1) === 0

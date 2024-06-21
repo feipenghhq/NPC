@@ -24,6 +24,7 @@ case class ALU(config: RiscCoreConfig) extends Component {
         val result = out port config.xlenBits
         val addResult = out port config.xlenUInt // dedicated add result to speed up other logic that use tha adder result
     }
+    noIoPrefix()
 
     // ------------------------------
     // Calculate result
@@ -53,10 +54,10 @@ case class ALU(config: RiscCoreConfig) extends Component {
     sltResult := 0
     sltResult(0) := source1.msb & ~source2.msb | (~(source1.msb ^ source2.msb)) & subResult(config.xlen - 1)
 
-    // if there is no carry, then src1 is smaller then src2 for sltu
+    // if there is carry, then src1 is smaller then src2 for sltu
     val sltuResult = config.xlenUInt
     sltuResult := 0
-    sltuResult(0) := ~subResult.msb
+    sltuResult(0) := subResult.msb
 
     // ------------------------------
     // Mux out the output

@@ -42,7 +42,7 @@ case class EXU(config: RiscCoreConfig) extends Component {
     val aluSrc2 = Mux(cpuCtrl.selImm,   immediate,         iduData.rs2Data)
 
     val uAlu = ALU(config)
-    uAlu.io.opcode <> cpuCtrl.opcode
+    uAlu.io.opcode <> cpuCtrl.aluOpcode
     uAlu.io.src1 <> aluSrc1
     uAlu.io.src2 <> aluSrc2
     val aluRes = uAlu.io.result
@@ -93,10 +93,13 @@ case class EXU(config: RiscCoreConfig) extends Component {
     // ----------------------------
     // Register Write Back
     // ----------------------------
+    val pcPlus4 = iduData.pc + 4
     io.rdWrCtrl.payload.addr <> cpuCtrl.rdAddr
     io.rdWrCtrl.valid <> cpuCtrl.rdWrite
-    io.rdWrCtrl.payload.data := Mux(csrCtrl.read, uCSR.io.csrRdata,
-                                Mux(cpuCtrl.memRead, uMeu.io.rdata, aluRes))
+    io.rdWrCtrl.payload.data := Mux(csrCtrl.read,    uCSR.io.csrRdata,
+                                Mux(cpuCtrl.memRead, uMeu.io.rdata,
+                                Mux(cpuCtrl.jump,    pcPlus4.asBits,
+                                                     aluRes.asBits)))
 }
 
 

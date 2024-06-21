@@ -32,7 +32,8 @@ case class CpuCtrl(config: RiscCoreConfig) extends Bundle {
     val mret  = Bool()
     val aluSelPc = Bool()
     val selImm = Bool()
-    val opcode = Bits(5 bits)
+    val aluOpcode = Bits(5 bits)
+    val opcode = Bits(3 bits)
     val rs1Addr = UInt(config.regidWidth bits)
     val rs2Addr = UInt(config.regidWidth bits)
     val immediate = config.xlenSInt
@@ -77,18 +78,17 @@ case class Decoder(config: RiscCoreConfig) extends Component {
     val phase3 = phase === 3
 
     // Decode the instruction based on different opcode type
-    // FIXME: Need to add phase3
-    val luiType = opcode === B"01101"
-    val auipcType = opcode === B"00101"
-    val jalType = opcode === B"11011"
-    val jalrType = opcode === B"11001"
-    val iType = opcode === B"00100"
-    val rType = opcode === B"01100"
-    val branchType = opcode === B"11000"
-    val loadType = opcode === B"00000"
-    val storeType = opcode === B"01000"
-    val fenceType = opcode === B"00011"
-    val systemType = opcode === B"11100"
+    val luiType = phase3 & opcode === B"01101"
+    val auipcType = phase3 & opcode === B"00101"
+    val jalType = phase3 & opcode === B"11011"
+    val jalrType = phase3 & opcode === B"11001"
+    val iType = phase3 & opcode === B"00100"
+    val rType = phase3 & opcode === B"01100"
+    val branchType = phase3 & opcode === B"11000"
+    val loadType = phase3 & opcode === B"00000"
+    val storeType = phase3 & opcode === B"01000"
+    val fenceType = phase3 & opcode === B"00011"
+    val systemType = phase3 & opcode === B"11100"
 
     //-----------------------------------
     // generate control signal
@@ -101,7 +101,7 @@ case class Decoder(config: RiscCoreConfig) extends Component {
     cpuCtrl.aluSelPc := jalType | auipcType | branchType
     cpuCtrl.selImm := jalType | jalrType | branchType | luiType | auipcType | iType | loadType | storeType
 
-    cpuCtrl.rdWrite := luiType | auipcType | jalType | jalrType | iType | rType | loadType
+    cpuCtrl.rdWrite := luiType | auipcType | jalType | jalrType | iType | rType | loadType | csrCtrl.read
     cpuCtrl.branch := branchType
     cpuCtrl.jump := jalType | jalrType
     cpuCtrl.memRead := loadType
@@ -110,13 +110,16 @@ case class Decoder(config: RiscCoreConfig) extends Component {
     cpuCtrl.ecall := systemType & (instruction(31 downto 7) === B"25'x0" )
     cpuCtrl.mret := systemType & (instruction(31 downto 7) === B"25'x604000")
 
-    // opcode(2 downto 0): same encoding as funct3 or add for some instruction
-    // opcode(3): distinguish add/sub, srl(i)/sra(i) same as instruction[30]
-    // opcode(4): lui instruction for ALU
+    // aluOpcode(2 downto 0): same encoding as funct3 or add for some instruction
+    // aluOpcode(3): distinguish add/sub, srl(i)/sra(i) same as instruction[30]
+    // aluOpcode(4): lui instruction for ALU
     val opcodeAdd = branchType | luiType | auipcType | jalType | jalrType | loadType | storeType
-    cpuCtrl.opcode(2 downto 0) := Mux(opcodeAdd, B"000", funct3)
-    cpuCtrl.opcode(3) := Mux(opcodeAdd, False, instruction(30))
-    cpuCtrl.opcode(4) := luiType
+    cpuCtrl.aluOpcode(2 downto 0) := Mux(opcodeAdd, B"000", funct3)
+    cpuCtrl.aluOpcode(3) := instruction(30) & (
+                            ((iType | rType) & (funct3 === B"101")) | // srl(i)/sra(i)
+                             (rType          & (funct3 === B"000")))  // add/sub
+    cpuCtrl.aluOpcode(4) := luiType
+    cpuCtrl.opcode := funct3
 
     //-----------------------------------
     // generate control signal for ISA extension

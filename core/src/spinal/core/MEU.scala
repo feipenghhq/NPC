@@ -36,11 +36,12 @@ case class MEU(config: RiscCoreConfig) extends Component {
         val dbus = master(DbusBundle(config))
         val memRead = in port Bool()
         val memWrite = in port Bool()
-        val opcode = in port Bits(5 bits)
+        val opcode = in port Bits(3 bits)
         val addr = in port config.xlenUInt
         val wdata = in port config.xlenBits
         val rdata = out port config.xlenBits
     }
+    noIoPrefix()
 
     val byteAddr = io.addr(1 downto 0)
 
@@ -65,7 +66,7 @@ case class MEU(config: RiscCoreConfig) extends Component {
             io.dbus.wdata := io.wdata(15 downto 0) #* 2
         }
         default { // SW
-            io.dbus.strobe := (1 << config.nbyte - 1)
+            io.dbus.strobe := ((1 << config.nbyte) - 1)
             io.dbus.wdata := io.wdata
         }
     }
