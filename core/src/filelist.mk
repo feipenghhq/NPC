@@ -15,6 +15,7 @@ GEN_PATH = $(RTL_PATH)/src/gen
 ifeq ($(TOP),CoreN)
 VERILOG_SRCS += $(RTL_PATH)/src/gen/CoreN.v
 VERILOG_SRCS += $(RTL_PATH)/src/verilog/core/CoreNDPI.sv
+VERILOG_SRCS += $(RTL_PATH)/src/verilog/misc/SramDpi.sv
 endif
 
 $(GEN_PATH)/CoreN.v:
