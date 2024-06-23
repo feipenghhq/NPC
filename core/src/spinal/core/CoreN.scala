@@ -15,14 +15,14 @@ package core
 import spinal.core._
 import spinal.lib._
 import config._
-import _root_.misc.SramDpi
+import _root_.misc._
+import _root_.bus.Axi4Lite._
 
 
 
 case class CoreN(config: RiscCoreConfig) extends Component {
-    val ibus = IbusBundle(config)
-    val dbus = DbusBundle(config)
-    noIoPrefix()
+    val ibus = Axi4Lite(config.axi4LiteConfig)
+    val dbus = Axi4Lite(config.axi4LiteConfig)
 
     val uIFU = IFU(config)
     val uIDU = IDU(config)
@@ -45,22 +45,17 @@ case class CoreN(config: RiscCoreConfig) extends Component {
     uCoreNDpi.io.ecall := iduData.cpuCtrl.ecall
     uCoreNDpi.io.pc := iduData.pc
 
-    val uIfuSram = SramDpi(config)
+    val uIfuSram = Axi4LiteSramDpi(config)
     uIfuSram.io.ifetch := True
     uIfuSram.io.pc := uIFU.io.ifuData.payload.pc
-    uIfuSram.io.valid := True
-    uIfuSram.io.write := False
-    uIfuSram.io.addr  <> ibus.addr
-    uIfuSram.io.strobe := 0
-    uIfuSram.io.rdata <> ibus.data
-    uIfuSram.io.wdata := 0
+    uIfuSram.io.bus <> ibus
 
-    val uLsuSram = SramDpi(config)
+    val uLsuSram = Axi4LiteSramDpi(config)
     uLsuSram.io.ifetch := False
     uLsuSram.io.pc := uEXU.io.iduData.payload.pc
-    uLsuSram.io.assignSomeByName(dbus)
-    uLsuSram.io.rdata.removeAssignments()
-    dbus.rdata := uLsuSram.io.rdata
+    //uLsuSram.io.assignSomeByName(dbus)
+    //uLsuSram.io.rdata.removeAssignments()
+    uLsuSram.io.bus <> dbus
 }
 
 object CoreNVerilog extends App {

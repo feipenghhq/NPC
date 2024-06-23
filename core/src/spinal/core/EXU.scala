@@ -14,6 +14,8 @@ package core
 import spinal.core._
 import spinal.lib._
 import config._
+import _root_.bus.Axi4Lite._
+import spinal.core.Verilator._
 
 case class EXU(config: RiscCoreConfig) extends Component {
     val io = new Bundle {
@@ -21,7 +23,7 @@ case class EXU(config: RiscCoreConfig) extends Component {
         val rdWrCtrl = master Flow(RdWrCtrl(config))
         val branchCtrl = master Flow(config.xlenUInt)
         val trapCtrl = master Flow(config.xlenUInt)
-        val dbus = master(DbusBundle(config))
+        val dbus = master(Axi4Lite(config.axi4LiteConfig))
     }
 
     // ----------------------------
@@ -41,12 +43,6 @@ case class EXU(config: RiscCoreConfig) extends Component {
     val uLsu = LSU(config)
     val uCSR = CSR(config)
     val uTrapCtrl = TrapCtrl(config)
-
-    // ----------------------------
-    // Handshake
-    // ----------------------------
-    val stall = cpuCtrl.memRead & ~uLsu.io.rvalid
-    io.iduData.ready := ~stall
 
     // ----------------------------
     // Connection and glue logic
@@ -107,7 +103,15 @@ case class EXU(config: RiscCoreConfig) extends Component {
                                 Mux(cpuCtrl.muldiv,  uMulDiv.io.result.asBits,
                                                      aluRes.asBits))))
 
+    // ----------------------------
+    // Handshake
+    // ----------------------------
+    val stall = cpuCtrl.memRead & ~uLsu.io.rvalid
+    io.iduData.ready := ~stall
 
+    // for simulation
+    val done = io.iduData.fire
+    done.addAttribute(public)
 }
 
 
