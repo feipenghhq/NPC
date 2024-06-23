@@ -77,14 +77,22 @@ void CoreN::reset() {
 
 bool CoreN::run(uint64_t step) {
     int cnt = 0;
+    int done = 0;
     while(!finished && ((step < 0 && sim_time < MAXNIM_TIME)  || cnt < step)) {
         clk_tick();
         // trace need to be put here because the next_pc is updated at this point
         // while the change has not been committed yet
         trace(top->CoreN->uIFU->pc, top->CoreN->uIFU->nextPC, top->CoreN->uIFU->instruction);
         clk_tick();
-        // diff test need to be put here as the change has been committed at this point
-        difftest(top->CoreN->uIFU->pc);
+        // Due to the cpu being multiple cycle now, we need to have a flag to tell when we can do
+        // difftest. We set the done signal when EX stage is done. It will be set at the beginning
+        // of the clock cycle after verilator evaluate the signal. So we should run difftest on
+        // the beginning of next clock so that all the data has been commited
+        if (done) {
+            difftest(top->CoreN->uIFU->pc);
+            done = 0;
+        }
+        if (top->CoreN->uEXU->done) done = 1;
         update_device();
         check();
         cnt++;

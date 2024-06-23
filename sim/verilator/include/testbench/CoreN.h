@@ -19,6 +19,7 @@
 #include "VCoreN_CoreN.h"
 #include "VCoreN_IFU.h"
 #include "VCoreN_IDU.h"
+#include "VCoreN_EXU.h"
 #include "VCoreN_RegisterFile.h"
 #include "VCoreN__Dpi.h"
 #include "Dut.h"
