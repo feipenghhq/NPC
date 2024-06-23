@@ -24,42 +24,50 @@ case class EXU(config: RiscCoreConfig) extends Component {
         val dbus = master(DbusBundle(config))
     }
 
+    // ----------------------------
     // path alias
+    // ----------------------------
     val iduData = io.iduData.payload
     val cpuCtrl = iduData.cpuCtrl
     val csrCtrl = iduData.csrCtrl
     val immediate = cpuCtrl.immediate.asBits
 
     // ----------------------------
-    // Handshake
+    // Instantiate all modules
     // ----------------------------
-    io.iduData.ready := True
+    val uAlu = ALU(config)
+    val uMulDiv = MulDiv(config)
+    val uBeu = BEU(config)
+    val uLsu = LSU(config)
+    val uCSR = CSR(config)
+    val uTrapCtrl = TrapCtrl(config)
 
     // ----------------------------
-    // ALU
+    // Handshake
     // ----------------------------
+    val stall = cpuCtrl.memRead & ~uLsu.io.rvalid
+    io.iduData.ready := ~stall
+
+    // ----------------------------
+    // Connection and glue logic
+    // ----------------------------
+
+    // ALU
     val aluSrc1 = Mux(cpuCtrl.aluSelPc, iduData.pc.asBits, iduData.rs1Data)
     val aluSrc2 = Mux(cpuCtrl.selImm,   immediate,         iduData.rs2Data)
 
-    val uAlu = ALU(config)
     uAlu.io.opcode <> cpuCtrl.aluOpcode
     uAlu.io.src1 <> aluSrc1
     uAlu.io.src2 <> aluSrc2
     val aluRes = uAlu.io.result
     val aluAddRes = uAlu.io.addResult
 
-    // ----------------------------
     // MulDiv
-    // ----------------------------
-    val uMulDiv = MulDiv(config)
     uMulDiv.io.opcode <> cpuCtrl.opcode
     uMulDiv.io.src1 <> aluSrc1
     uMulDiv.io.src2 <> aluSrc2
 
-    // ----------------------------
     // BEU
-    // ----------------------------
-    val uBeu = BEU(config)
     uBeu.io.branch <> cpuCtrl.branch
     uBeu.io.jump <> cpuCtrl.jump
     uBeu.io.opcode <> cpuCtrl.opcode
@@ -68,28 +76,19 @@ case class EXU(config: RiscCoreConfig) extends Component {
     uBeu.io.addr <> aluAddRes
     uBeu.io.branchCtrl <> io.branchCtrl
 
-    // ----------------------------
     // MEU
-    // ----------------------------
-    val uMeu = MEU(config)
-    io.dbus <> uMeu.io.dbus
-    uMeu.io.memRead <> cpuCtrl.memRead
-    uMeu.io.memWrite <> cpuCtrl.memWrite
-    uMeu.io.opcode <> cpuCtrl.opcode
-    uMeu.io.addr <> aluAddRes
-    uMeu.io.wdata <> io.iduData.rs2Data
+    io.dbus <> uLsu.io.dbus
+    uLsu.io.memRead <> cpuCtrl.memRead
+    uLsu.io.memWrite <> cpuCtrl.memWrite
+    uLsu.io.opcode <> cpuCtrl.opcode
+    uLsu.io.addr <> aluAddRes
+    uLsu.io.wdata <> io.iduData.rs2Data
 
-    // ----------------------------
     // CSR
-    // ----------------------------
-    val uCSR = CSR(config)
     uCSR.io.csrCtrl <> csrCtrl
     uCSR.io.csrWdata <> Mux(cpuCtrl.selImm, immediate, io.iduData.payload.rs1Data)
 
-    // ----------------------------
     // TrapCtrl
-    // ----------------------------
-    val uTrapCtrl = TrapCtrl(config)
     uTrapCtrl.io.csrRdPort <> uCSR.io.csrRdPort
     uTrapCtrl.io.csrWrPort <> uCSR.io.csrWrPort
     uTrapCtrl.io.ecall <> cpuCtrl.ecall
@@ -98,17 +97,17 @@ case class EXU(config: RiscCoreConfig) extends Component {
     uTrapCtrl.io.trap <> uCSR.io.trap
     uTrapCtrl.io.pc <> io.iduData.pc
 
-    // ----------------------------
     // Register Write Back
-    // ----------------------------
     val pcPlus4 = iduData.pc + 4
     io.rdWrCtrl.payload.addr <> cpuCtrl.rdAddr
-    io.rdWrCtrl.valid <> cpuCtrl.rdWrite
+    io.rdWrCtrl.valid := cpuCtrl.rdWrite & io.iduData.fire
     io.rdWrCtrl.payload.data := Mux(csrCtrl.read,    uCSR.io.csrRdata,
-                                Mux(cpuCtrl.memRead, uMeu.io.rdata,
+                                Mux(cpuCtrl.memRead, uLsu.io.rdata,
                                 Mux(cpuCtrl.jump,    pcPlus4.asBits,
                                 Mux(cpuCtrl.muldiv,  uMulDiv.io.result.asBits,
                                                      aluRes.asBits))))
+
+
 }
 
 

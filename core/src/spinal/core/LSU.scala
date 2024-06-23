@@ -6,7 +6,7 @@
  * Date Created: 6/11/2024
  *
  * ------------------------------------------------------------------------------------------------
- * MEU: Memory Execution Unit
+ * LSU: Load Store Unit
  * ------------------------------------------------------------------------------------------------
  */
 
@@ -31,7 +31,7 @@ case class DbusBundle(config: RiscCoreConfig) extends Bundle with IMasterSlave {
     }
 }
 
-case class MEU(config: RiscCoreConfig) extends Component {
+case class LSU(config: RiscCoreConfig) extends Component {
     val io = new Bundle {
         val dbus = master(DbusBundle(config))
         val memRead = in port Bool()
@@ -40,6 +40,7 @@ case class MEU(config: RiscCoreConfig) extends Component {
         val addr = in port config.xlenUInt
         val wdata = in port config.xlenBits
         val rdata = out port config.xlenBits
+        val rvalid = out port Bool()
     }
     noIoPrefix()
 
@@ -95,10 +96,11 @@ case class MEU(config: RiscCoreConfig) extends Component {
             io.rdata := io.dbus.rdata
         }
     }
+    io.rvalid := RegNext(io.memRead) init False
 }
 
 
-object MEUVerilog extends App {
+object LSUVerilog extends App {
     val config = RiscCoreConfig(32, 0x00000000, 32, hasRv32M = true, hasZicsr = true)
-    Config.spinal.generateVerilog(MEU(config))
+    Config.spinal.generateVerilog(LSU(config))
 }

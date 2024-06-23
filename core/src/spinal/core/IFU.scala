@@ -46,7 +46,7 @@ case class IFU(config: RiscCoreConfig) extends Component {
     val nextPC = config.xlenUInt
     nextPC.addAttribute(public)
 
-    val pc = RegNextWhen(nextPC, io.ifuData.valid) init (config.pcRstVector)
+    val pc = RegNextWhen(nextPC, io.ifuData.fire) init (config.pcRstVector)
     pc.addAttribute(public)
 
     val instruction = config.xlenBits
@@ -62,7 +62,9 @@ case class IFU(config: RiscCoreConfig) extends Component {
     }
 
     io.ifuData.valid.setAsReg() init False
-    io.ifuData.valid := ~io.ifuData.valid // read takes one cycle
+    when(io.ifuData.ready) {
+        io.ifuData.valid := ~io.ifuData.valid
+    }
 
     io.ifuData.pc := pc
     io.ifuData.instruction := instruction

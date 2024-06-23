@@ -40,16 +40,10 @@ case class CoreN(config: RiscCoreConfig) extends Component {
 
     val iduData = uIDU.io.iduData.payload
 
-    val uCoreNDPI = CoreNDPI(config)
-    uCoreNDPI.io.ebreak := iduData.cpuCtrl.ebreak
-    uCoreNDPI.io.ecall := iduData.cpuCtrl.ecall
-    uCoreNDPI.io.pc := iduData.pc
-    uCoreNDPI.io.data_valid := dbus.valid
-    uCoreNDPI.io.data_wen := dbus.write
-    uCoreNDPI.io.data_wdata := dbus.wdata
-    uCoreNDPI.io.data_addr := dbus.addr
-    uCoreNDPI.io.data_wstrb := dbus.strobe
-    dbus.rdata := uCoreNDPI.io.data_rdata
+    val uCoreNDpi = CoreNDpi(config)
+    uCoreNDpi.io.ebreak := iduData.cpuCtrl.ebreak
+    uCoreNDpi.io.ecall := iduData.cpuCtrl.ecall
+    uCoreNDpi.io.pc := iduData.pc
 
     val uIfuSram = SramDpi(config)
     uIfuSram.io.ifetch := True
@@ -60,6 +54,13 @@ case class CoreN(config: RiscCoreConfig) extends Component {
     uIfuSram.io.strobe := 0
     uIfuSram.io.rdata <> ibus.data
     uIfuSram.io.wdata := 0
+
+    val uLsuSram = SramDpi(config)
+    uLsuSram.io.ifetch := False
+    uLsuSram.io.pc := uEXU.io.iduData.payload.pc
+    uLsuSram.io.assignSomeByName(dbus)
+    uLsuSram.io.rdata.removeAssignments()
+    dbus.rdata := uLsuSram.io.rdata
 }
 
 object CoreNVerilog extends App {
