@@ -82,7 +82,7 @@ bool CoreN::run(uint64_t step) {
         clk_tick();
         // trace need to be put here because the next_pc is updated at this point
         // while the change has not been committed yet
-        trace(top->CoreN->uIFU->pc, top->CoreN->uIFU->nextPC, top->CoreN->uIFU->instruction);
+        if (done) trace(top->CoreN->uIFU->pc, top->CoreN->uIFU->nextPC, top->CoreN->uIFU->instruction);
         clk_tick();
         // Due to the cpu being multiple cycle now, we need to have a flag to tell when we can do
         // difftest. We set the done signal when EX stage is done. It will be set at the beginning
