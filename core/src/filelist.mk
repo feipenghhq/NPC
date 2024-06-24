@@ -18,5 +18,7 @@ VERILOG_SRCS += $(RTL_PATH)/src/verilog/core/CoreNDpi.sv
 VERILOG_SRCS += $(RTL_PATH)/src/verilog/misc/SramDpi.sv
 endif
 
-$(GEN_PATH)/CoreN.v:
+SCALA_SRCS += $(wildcard $(RTL_PATH)/src/spinal/*/*.scala)
+
+$(GEN_PATH)/CoreN.v: $(SCALA_SRCS)
 	cd $(RTL_PATH) && sbt "runMain core.CoreNVerilog"

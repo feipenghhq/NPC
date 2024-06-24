@@ -74,29 +74,12 @@ case class IFU(config: RiscCoreConfig) extends Component {
     // -----------------------------
     // IBUS logic
     // -----------------------------
-    val arFired = Reg(Bool()) init False
-    val rFired = Reg(Bool()) init False
-    // Set arFired when ar channel handshake complete but ifuData handshake does not complete
-    // meaning the instruction is not passed to the next stage/module
-    when(io.ibus.ar.fire) {
-        arFired := ~io.ifuData.fire
-    }
-    // clear it when ifuData handshake complete
-    .elsewhen(io.ifuData.fire) {
-        arFired := False
-    }
-
-    // Set rFired when r channel handshake complete but we are not ready to take it to the next stage
-    when(io.ibus.r.fire & ~io.ifuData.fire) {
-        rFired := True
-    }
-    // clear it when ifuData handshake complete
-    .elsewhen(io.ifuData.fire) {
-        rFired := False
-    }
+    val arvalid = RegNextWhen(True, io.ifuData.fire) init True
+    val arvalidClear = io.ibus.r.fire & ~io.ifuData.fire
+    arvalid.clearWhen(arvalidClear)
 
     io.ibus.ar.payload.araddr := pc
-    io.ibus.ar.valid := ~arFired & start
+    io.ibus.arReq(start & arvalid)
     io.ibus.r.ready := True
     io.ibus.aw <> io.ibus.aw.getZero
     io.ibus.w <> io.ibus.w.getZero
@@ -105,9 +88,12 @@ case class IFU(config: RiscCoreConfig) extends Component {
     // -----------------------------
     // handshake
     // -----------------------------
-    // set the IFU valid when we get the AXI read data
-    io.ifuData.valid := io.ibus.r.fire | rFired
 
+    // set the IFU valid when we get the AXI read data, clear it when it is sent to the next stage
+    val rdataReceived = RegNextWhen(True, io.ibus.r.fire)
+    rdataReceived.clearWhen(io.ifuData.fire)
+
+    io.ifuData.valid := io.ibus.r.fire | rdataReceived
 }
 
 object IFUVerilog extends App {

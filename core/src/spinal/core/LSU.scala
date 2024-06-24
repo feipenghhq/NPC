@@ -26,6 +26,7 @@ case class LSU(config: RiscCoreConfig) extends Component {
         val addr = in port config.xlenUInt
         val wdata = in port config.xlenBits
         val rdata = out port config.xlenBits
+        val wready = out port Bool()
         val rvalid = out port Bool()
     }
     noIoPrefix()
@@ -36,14 +37,14 @@ case class LSU(config: RiscCoreConfig) extends Component {
     // Write Logic
     // ---------------------------------------
     // aw
-    io.dbus.aw.valid := io.memWrite
+    io.dbus.awReq(io.memWrite)
     io.dbus.aw.payload.awaddr := io.addr
 
-    // b channel is ignored for now
+    // b channel is always ready
     io.dbus.b.ready := True
 
     // w
-    io.dbus.w.valid := io.memWrite
+    io.dbus.wReq(io.memWrite)
     switch(io.opcode(1 downto 0)) {
         is(0) { // SB
             io.dbus.w.payload.wstrb := B(1, config.nbyte bits) |<< byteAddr
@@ -59,11 +60,13 @@ case class LSU(config: RiscCoreConfig) extends Component {
         }
     }
 
+    io.wready := io.dbus.b.fire
+
     // ---------------------------------------
     // Read logic
     // ---------------------------------------
     // ar
-    io.dbus.ar.valid := io.memRead
+    io.dbus.arReq(io.memRead)
     io.dbus.ar.payload.araddr := io.addr
 
     // r

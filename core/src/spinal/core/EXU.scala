@@ -106,7 +106,7 @@ case class EXU(config: RiscCoreConfig) extends Component {
     // ----------------------------
     // Handshake
     // ----------------------------
-    val stall = cpuCtrl.memRead & ~uLsu.io.rvalid
+    val stall = cpuCtrl.memRead & ~uLsu.io.rvalid | cpuCtrl.memWrite & ~uLsu.io.wready
     io.iduData.ready := ~stall
 
     // for simulation

@@ -41,4 +41,24 @@ case class Axi4Lite(config: Axi4LiteConfig) extends Bundle with IMasterSlave {
         master(ar, aw, w)
         slave(r, b)
     }
+
+    // Functions to assert request till the handshake complete
+    // set is the condition to set the valid signal
+    private def _request[T <: Bundle, K <: Bundle](set: Bool, reqChannel: Stream[T], respChannel: Stream[K]) {
+        val sent = RegNextWhen(True, reqChannel.fire) init False setName(reqChannel.name + "Sent")
+        sent.clearWhen(respChannel.fire)
+        reqChannel.valid := set & ~sent
+    }
+
+    def arReq(set: => Bool) {
+        _request(set, ar, r)
+    }
+
+    def awReq(set: => Bool ) {
+        _request(set, aw, b)
+    }
+
+    def wReq(set: => Bool ) {
+        _request(set, w, b)
+    }
 }
