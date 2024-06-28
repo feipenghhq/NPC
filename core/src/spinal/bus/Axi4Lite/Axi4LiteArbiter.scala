@@ -15,7 +15,13 @@ import spinal.core._
 import spinal.lib._
 import config._
 
-case class Axi4LiteArbiter(config: Axi4LiteConfig, count: Int) extends Component {
+/**
+ * Axi4LiteArbiter
+ * - config: AXI config
+ * - count:  Number of host
+ * - fixCombLoop: Fix combLoop in multiple cycle CPU
+ */
+case class Axi4LiteArbiter(config: Axi4LiteConfig, count: Int, fixCombLoop: Boolean = false) extends Component {
     val io = new Bundle {
         val input = Vec(slave(Axi4Lite(config)), count)
         val output = master(Axi4Lite(config))
@@ -47,7 +53,13 @@ case class Axi4LiteArbiter(config: Axi4LiteConfig, count: Int) extends Component
         // the AXI4Lite does not support outstanding transaction so read response
         // must come back before a new request
         val selectedOH = RegNextWhen(arbiter.grantOH, io.output.ar.fire) init 1
-        val respSelOH = io.output.ar.fire ? arbiter.grantOH | selectedOH
+        val respSelOH = cloneOf(selectedOH)
+        if (fixCombLoop) {
+            respSelOH := selectedOH
+        } else {
+            // This is the correct implementation but create a combo loop in our multiple-cycle CPU design
+            respSelOH := io.output.ar.fire ? arbiter.grantOH | selectedOH
+        }
 
         // AR channel
         io.output.ar.valid := ar.map(_.valid).reduceBalancedTree(_ || _)

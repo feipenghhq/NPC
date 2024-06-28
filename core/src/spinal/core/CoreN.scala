@@ -45,17 +45,31 @@ case class CoreN(config: RiscCoreConfig) extends Component {
     uCoreNDpi.io.ecall := iduData.cpuCtrl.ecall
     uCoreNDpi.io.pc := iduData.pc
 
-    val uIfuSram = Axi4LiteSramDpi(config, 1, 0)
-    uIfuSram.io.ifetch := True
-    uIfuSram.io.pc := uIFU.io.ifuData.payload.pc
-    uIfuSram.io.bus <> ibus
+    if (config.separateSram) {
+        val uIfuSram = Axi4LiteSramDpi(config, 1, 0)
+        uIfuSram.io.ifetch := True
+        uIfuSram.io.pc := uIFU.io.ifuData.payload.pc
+        uIfuSram.io.bus <> ibus
 
-    val uLsuSram = Axi4LiteSramDpi(config, 1, 0)
-    uLsuSram.io.ifetch := False
-    uLsuSram.io.pc := uEXU.io.iduData.payload.pc
-    //uLsuSram.io.assignSomeByName(dbus)
-    //uLsuSram.io.rdata.removeAssignments()
-    uLsuSram.io.bus <> dbus
+        val uLsuSram = Axi4LiteSramDpi(config, 1, 0)
+        uLsuSram.io.ifetch := False
+        uLsuSram.io.pc := uEXU.io.iduData.payload.pc
+        //uLsuSram.io.assignSomeByName(dbus)
+        //uLsuSram.io.rdata.removeAssignments()
+        uLsuSram.io.bus <> dbus
+    } else {
+        // arbitrate between the 2 buses
+        val axiConfig = Axi4LiteConfig(addrWidth=config.xlen, dataWidth=config.xlen)
+        val axiArbiter = Axi4LiteArbiter(axiConfig, 2, true)
+        val sramAxi = Axi4Lite(axiConfig)
+        axiArbiter.io.input <> Vec(ibus, dbus)
+        axiArbiter.io.output <> sramAxi
+
+        val sram = Axi4LiteSramDpi(config, 1, 0)
+        sram.io.ifetch := ibus.ar.valid
+        sram.io.pc := uIFU.io.ifuData.payload.pc
+        sram.io.bus <> sramAxi
+    }
 }
 
 object CoreNVerilog extends App {
