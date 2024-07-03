@@ -12,13 +12,13 @@ RTL_PATH = $(REPO)/core
 GEN_PATH = $(RTL_PATH)/src/gen
 
 # Verilog source file
-ifeq ($(TOP),CoreN)
-VERILOG_SRCS += $(RTL_PATH)/src/gen/CoreN.v
+ifeq ($(TOP),CoreNSoC)
+VERILOG_SRCS += $(RTL_PATH)/src/gen/CoreNSoC.v
 VERILOG_SRCS += $(RTL_PATH)/src/verilog/core/CoreNDpi.sv
 VERILOG_SRCS += $(RTL_PATH)/src/verilog/misc/SramDpi.sv
 endif
 
 SCALA_SRCS += $(wildcard $(RTL_PATH)/src/spinal/*/*.scala)
 
-$(GEN_PATH)/CoreN.v: $(SCALA_SRCS)
-	cd $(RTL_PATH) && sbt "runMain core.CoreNVerilog"
+$(GEN_PATH)/CoreNSoC.v: $(SCALA_SRCS)
+	cd $(RTL_PATH) && sbt "runMain soc.CoreNSoCVerilog"

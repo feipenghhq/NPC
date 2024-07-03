@@ -6,11 +6,11 @@
  * Date Created: 12/19/2023
  *
  * ------------------------------------------------------------------------------------------------
- *  CoreN class: Provide environment for CoreN CPU design
+ *  CoreN class: Provide environment for CPU design
  * ------------------------------------------------------------------------------------------------
  */
 
-#include "CoreN.h"
+#include "Core.h"
 
 #define MAXNIM_TIME 10000
 
@@ -38,15 +38,15 @@ word_t dpi_mem_access_pc;
 // Class functions
 // ---------------------------------------------
 
-CoreN::CoreN(int argc, char *argv[], const test_info *info):Dut(argc, argv, info) {
-    top = new VCoreN("CoreN");
+TOP::TOP(int argc, char *argv[], const test_info *info):Dut(argc, argv, info) {
+    top = new VTOP();
 }
 
-CoreN::~CoreN() {
+TOP::~TOP() {
     delete top;
 }
 
-void CoreN::init_trace(const char *name, int level) {
+void TOP::init_trace(const char *name, int level) {
 #ifdef CONFIG_WAVE
     Verilated::traceEverOn(true);
     m_trace = new VerilatedVcdC;
@@ -55,14 +55,14 @@ void CoreN::init_trace(const char *name, int level) {
 #endif
 }
 
-void CoreN::clk_tick() {
+void TOP::clk_tick() {
     top->clk ^= 1;
     top->eval();
     dump();
     sim_time++;
 }
 
-void CoreN::reset() {
+void TOP::reset() {
     top->clk = 1; // initialize clock
     top->resetn = 0;
     top->eval();
@@ -75,24 +75,28 @@ void CoreN::reset() {
     assert(top->clk == 1); // we want to change data on negedge
 }
 
-bool CoreN::run(uint64_t step) {
+bool TOP::run(uint64_t step) {
     int cnt = 0;
     int done = 0;
     while(!finished && ((step < 0 && sim_time < MAXNIM_TIME)  || cnt < step)) {
         clk_tick();
         // trace need to be put here because the next_pc is updated at this point
         // while the change has not been committed yet
-        if (done) trace(top->CoreN->uIFU->pc, top->CoreN->uIFU->nextPC, top->CoreN->uIFU->instruction);
+        #if defined(CONFIG_ITRACE) || defined(CONFIG_FTRACE)
+        if (done) trace(PC, NEXT_PC, INSTRUCTION);
+        #endif
         clk_tick();
         // Due to the cpu being multiple cycle now, we need to have a flag to tell when we can do
         // difftest. We set the done signal when EX stage is done. It will be set at the beginning
         // of the clock cycle after verilator evaluate the signal. So we should run difftest on
         // the beginning of next clock so that all the data has been commited
+        #ifdef CONFIG_DIFFTEST
         if (done) {
-            difftest(top->CoreN->uIFU->pc);
+            difftest(PC);
             done = 0;
         }
-        if (top->CoreN->uEXU->done) done = 1;
+        #endif
+        if (DONE) done = 1;
         update_device();
         check();
         cnt++;
@@ -100,8 +104,8 @@ bool CoreN::run(uint64_t step) {
     return finished;
 }
 
-word_t CoreN::reg_id2val(int id) {
-    return top->CoreN->uIDU->rf->regs[id];
+word_t TOP::reg_id2val(int id) {
+    return REGS[id];
 }
 
 // ---------------------------------------------

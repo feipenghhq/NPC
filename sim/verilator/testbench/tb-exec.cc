@@ -9,7 +9,7 @@
 // ------------------------------------------------------------------------------------------------
 
 #include <getopt.h>
-#include "testbench/CoreN.h"
+#include "testbench/Core.h"
 #include "common.h"
 
 // ------------------------------------
@@ -164,8 +164,8 @@ static void close_log() {
  */
 static Dut *select_dut(int argc, char *argv[], test_info *info) {
     Dut *dut = NULL;
-    if (strcmp(info->dut, DUT_COREN) == 0)
-        dut = new CoreN(argc, argv, info);
+    if (strcmp(info->dut, "CoreNSoC") == 0)
+        dut = new CoreNSoC(argc, argv, info);
     else {
         log_err("Undefined dut: %s", info->dut);
         exit(0);

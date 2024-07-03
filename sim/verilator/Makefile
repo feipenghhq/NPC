@@ -73,7 +73,7 @@ $(BUILD_DIR)/%.o: %.c $(C_HDRS)
 ## RTL source files CPP source files
 ## --------------------------------------------------------
 
-TOP ?= CoreN
+TOP ?= CoreNSoC
 
 include $(REPO)/core/src/filelist.mk
 
