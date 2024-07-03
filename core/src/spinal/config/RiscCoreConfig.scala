@@ -31,5 +31,5 @@ case class RiscCoreConfig(
     def xlenSInt = SInt(xlen bit)
     def regidUInt = UInt(regidWidth bit)
 
-    def axi4LiteConfig  = Axi4LiteConfig(addrWidth = xlen, dataWidth = xlen),
+    def axi4LiteConfig  = Axi4LiteConfig(addrWidth = xlen, dataWidth = 64, axi4 = true),
 }

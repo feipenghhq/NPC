@@ -38,25 +38,36 @@ case class LSU(config: RiscCoreConfig) extends Component {
     // ---------------------------------------
     // aw
     io.dbus.awReq(io.memWrite)
-    io.dbus.aw.payload.awaddr := io.addr
+    val aw = io.dbus.aw.payload
+    aw.awaddr  := io.addr
+    aw.awid    := 0
+    aw.awlen   := 0
+    aw.awburst := 0
+    switch(io.opcode(1 downto 0)) {
+        is(0)   {aw.awsize := B"000"} // SB
+        is(1)   {aw.awsize := B"001"} // SH
+        default {aw.awsize := B"010"} // SW
+    }
 
     // b channel is always ready
     io.dbus.b.ready := True
 
     // w
     io.dbus.wReq(io.memWrite)
+    val w = io.dbus.w.payload
+    w.wlast  := True
     switch(io.opcode(1 downto 0)) {
         is(0) { // SB
-            io.dbus.w.payload.wstrb := B(1, config.nbyte bits) |<< byteAddr
-            io.dbus.w.payload.wdata := io.wdata(7 downto 0) #* 4
+            w.wstrb := (B(1, config.nbyte bits) |<< byteAddr).resized
+            w.wdata := (io.wdata(7 downto 0) #* 4).resized
         }
         is(1) { // SH
-            io.dbus.w.payload.wstrb := byteAddr(1) ## byteAddr(1) ## ~byteAddr(1) ## ~byteAddr(1)
-            io.dbus.w.payload.wdata := io.wdata(15 downto 0) #* 2
+            w.wstrb := (byteAddr(1) ## byteAddr(1) ## ~byteAddr(1) ## ~byteAddr(1)).resized
+            w.wdata := (io.wdata(15 downto 0) #* 2).resized
         }
         default { // SW
-            io.dbus.w.payload.wstrb := ((1 << config.nbyte) - 1)
-            io.dbus.w.payload.wdata := io.wdata
+            w.wstrb := ((1 << config.nbyte) - 1)
+            w.wdata := io.wdata.resized
         }
     }
 
@@ -67,13 +78,22 @@ case class LSU(config: RiscCoreConfig) extends Component {
     // ---------------------------------------
     // ar
     io.dbus.arReq(io.memRead)
-    io.dbus.ar.payload.araddr := io.addr
+    val ar = io.dbus.ar.payload
+    ar.araddr  := io.addr
+    ar.arid    := 0
+    ar.arlen   := 0
+    ar.arburst := 0
+    switch(io.opcode(2 downto 0)) {
+        is(0, 4)   {ar.arsize := B"000"} // LB/LBU
+        is(1, 5)   {ar.arsize := B"001"} // LH/LHU
+        default    {ar.arsize := B"010"} // LW
+    }
 
     // r
     io.dbus.r.ready := True
     // select the correct data portion based on the address
-    val byteData = io.dbus.r.payload.rdata.subdivideIn(8 bits).read(byteAddr(1 downto 0))
-    val halfData = io.dbus.r.payload.rdata.subdivideIn(16 bits).read(byteAddr(1 downto 1))
+    val byteData = io.dbus.r.payload.rdata(config.xlen-1 downto 0).subdivideIn(8 bits).read(byteAddr(1 downto 0))
+    val halfData = io.dbus.r.payload.rdata(config.xlen-1 downto 0).subdivideIn(16 bits).read(byteAddr(1 downto 1))
     switch(io.opcode(2 downto 0)) {
         is(0) { // LB
             io.rdata := byteData.asSInt.resize(config.xlen bits).asBits // sign extension
@@ -88,7 +108,7 @@ case class LSU(config: RiscCoreConfig) extends Component {
             io.rdata := halfData.resized
         }
         default { // LW
-            io.rdata := io.dbus.r.payload.rdata
+            io.rdata := io.dbus.r.payload.rdata.resized
         }
     }
     io.rvalid := io.dbus.r.fire

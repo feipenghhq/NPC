@@ -59,9 +59,8 @@ case class CoreN(config: RiscCoreConfig) extends Component {
         uLsuSram.io.bus <> dbus
     } else {
         // arbitrate between the 2 buses
-        val axiConfig = Axi4LiteConfig(addrWidth=config.xlen, dataWidth=config.xlen)
-        val axiArbiter = Axi4LiteArbiter(axiConfig, 2, true)
-        val sramAxi = Axi4Lite(axiConfig)
+        val axiArbiter = Axi4LiteArbiter(config.axi4LiteConfig, 2, true)
+        val sramAxi = Axi4Lite(config.axi4LiteConfig)
         axiArbiter.io.input <> Vec(ibus, dbus)
         axiArbiter.io.output <> sramAxi
 

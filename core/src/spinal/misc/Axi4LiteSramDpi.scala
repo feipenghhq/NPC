@@ -33,8 +33,8 @@ case class Axi4LiteSramDpi(config: RiscCoreConfig, respDelay: Int = 1, reqDelay:
     sram.io.valid   := io.bus.ar.fire | io.bus.aw.fire
     sram.io.write   := io.bus.aw.fire
     sram.io.addr    := io.bus.ar.valid ? io.bus.ar.payload.araddr | io.bus.aw.payload.awaddr
-    sram.io.strobe  := io.bus.w.payload.wstrb
-    sram.io.wdata   := io.bus.w.payload.wdata
+    sram.io.strobe  := io.bus.w.payload.wstrb.resized
+    sram.io.wdata   := io.bus.w.payload.wdata.resized
 
     if (reqDelay > 0) {
         def readySet[T <: Bundle](name: String, ch: Stream[T]): Timeout = {
@@ -57,14 +57,18 @@ case class Axi4LiteSramDpi(config: RiscCoreConfig, respDelay: Int = 1, reqDelay:
 
     io.bus.b.valid := io.bus.aw.fire
     io.bus.b.payload.bresp := 0
+    io.bus.b.payload.bid := 0
 
     io.bus.r.valid := Delay(io.bus.ar.fire, respDelay)
+    io.bus.r.payload.rid   := 0
+    io.bus.r.payload.rlast := True
+    io.bus.r.payload.rresp := 0
     // there is already 1 fixed read latency in the SramDpi module
     require(respDelay >= 1)
     if (respDelay == 1) {
-        io.bus.r.payload.rdata := sram.io.rdata
+        io.bus.r.payload.rdata := sram.io.rdata.resized
     } else {
-        io.bus.r.payload.rdata := RegNextWhen(sram.io.rdata, RegNext(sram.io.valid) init False)
+        io.bus.r.payload.rdata := RegNextWhen(sram.io.rdata, RegNext(sram.io.valid) init False).resized
     }
 
     // assertion to make sure that aw and w arrives at the same time
