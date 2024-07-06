@@ -24,7 +24,7 @@ case class CoreNSoC(config: RiscCoreConfig) extends Component {
     val ibus = Axi4Lite(config.axi4LiteConfig)
     val dbus = Axi4Lite(config.axi4LiteConfig)
 
-    val core = CoreN(config)
+    val core = CoreN(config, true)
     ibus <> core.io.ibus
     dbus <> core.io.dbus
 

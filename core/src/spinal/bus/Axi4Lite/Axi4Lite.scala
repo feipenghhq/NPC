@@ -14,6 +14,7 @@ package bus.Axi4Lite
 
 import spinal.core._
 import spinal.lib._
+import scala.reflect.runtime.universe._
 
 case class Axi4LiteConfig(
     addrWidth: Int = 32,
@@ -85,5 +86,19 @@ case class Axi4Lite(config: Axi4LiteConfig) extends Bundle with IMasterSlave {
 
     def wReq(set: => Bool ) {
         _request(set, w, b)
+    }
+
+    def updateSignalName(prefix: String) {
+        def setName[T<:Bundle](channel: => Stream[T]) {
+            channel.valid.setName(prefix + "_" + channel.name + "valid")
+            channel.ready.setName(prefix + "_" + channel.name + "ready")
+            channel.payload.elements.foreach(f => f._2.setName(prefix + "_" + f._1))
+        }
+        setName(ar)
+        setName(r)
+        setName(aw)
+        setName(w)
+        setName(b)
+        this
     }
 }
