@@ -31,7 +31,13 @@ case class LSU(config: RiscCoreConfig) extends Component {
     }
     noIoPrefix()
 
-    val byteAddr = io.addr(1 downto 0)
+    val dataWidth = config.axi4LiteConfig.dataWidth
+    val _64bit = dataWidth == 64
+    val numByte = dataWidth / 8
+    val numHalf = dataWidth / 16
+    val numWord = dataWidth / 32
+
+    val selAddr = if (_64bit) io.addr(2 downto 0) else io.addr(1 downto 0)
 
     // ---------------------------------------
     // Write Logic
@@ -58,16 +64,16 @@ case class LSU(config: RiscCoreConfig) extends Component {
     w.wlast  := True
     switch(io.opcode(1 downto 0)) {
         is(0) { // SB
-            w.wstrb := (B(1, config.nbyte bits) |<< byteAddr).resized
-            w.wdata := (io.wdata(7 downto 0) #* 4).resized
+            w.wstrb := (B(1, w.wstrb.getWidth bits) |<< selAddr).resized
+            w.wdata := (io.wdata(7 downto 0) #* numByte).resized
         }
         is(1) { // SH
-            w.wstrb := (byteAddr(1) ## byteAddr(1) ## ~byteAddr(1) ## ~byteAddr(1)).resized
-            w.wdata := (io.wdata(15 downto 0) #* 2).resized
+            w.wstrb := (B(3, w.wstrb.getWidth bits) |<< selAddr).resized
+            w.wdata := (io.wdata(15 downto 0) #* numHalf).resized
         }
         default { // SW
-            w.wstrb := ((1 << config.nbyte) - 1)
-            w.wdata := io.wdata.resized
+            w.wstrb := (B(15, w.wstrb.getWidth bits) |<< selAddr).resized
+            w.wdata := (io.wdata #* numWord).resized
         }
     }
 
@@ -92,8 +98,10 @@ case class LSU(config: RiscCoreConfig) extends Component {
     // r
     io.dbus.r.ready := True
     // select the correct data portion based on the address
-    val byteData = io.dbus.r.payload.rdata(config.xlen-1 downto 0).subdivideIn(8 bits).read(byteAddr(1 downto 0))
-    val halfData = io.dbus.r.payload.rdata(config.xlen-1 downto 0).subdivideIn(16 bits).read(byteAddr(1 downto 1))
+    val byteData = io.dbus.r.payload.rdata.subdivideIn(8 bits).read(selAddr(selAddr.getWidth-1 downto 0))
+    val halfData = io.dbus.r.payload.rdata.subdivideIn(16 bits).read(selAddr(selAddr.getWidth-1 downto 1))
+    val wordData = if (_64bit) io.dbus.r.payload.rdata.subdivideIn(32 bits).read(selAddr(selAddr.getWidth-1 downto 2))
+                   else        io.dbus.r.payload.rdata
     switch(io.opcode(2 downto 0)) {
         is(0) { // LB
             io.rdata := byteData.asSInt.resize(config.xlen bits).asBits // sign extension
@@ -108,7 +116,7 @@ case class LSU(config: RiscCoreConfig) extends Component {
             io.rdata := halfData.resized
         }
         default { // LW
-            io.rdata := io.dbus.r.payload.rdata.resized
+            io.rdata := wordData.resized
         }
     }
     io.rvalid := io.dbus.r.fire
