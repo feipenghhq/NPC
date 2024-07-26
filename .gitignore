@@ -1,6 +1,8 @@
 output
 .config*
 ..config*
+ysyxSoC
+!sim/ysyxSoC
 include/generated
 include/config
 .vscode

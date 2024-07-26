@@ -18,7 +18,15 @@ VERILOG_SRCS += $(RTL_PATH)/src/verilog/core/CoreNDpi.sv
 VERILOG_SRCS += $(RTL_PATH)/src/verilog/misc/SramDpi.sv
 endif
 
+ifeq ($(TOP),ysyxSoCFull)
+VERILOG_SRCS += $(RTL_PATH)/src/gen/YsyxSoC.v
+VERILOG_SRCS += $(RTL_PATH)/src/verilog/core/CoreNDpi.sv
+endif
+
 SCALA_SRCS += $(wildcard $(RTL_PATH)/src/spinal/*/*.scala)
 
 $(GEN_PATH)/CoreNSoC.v: $(SCALA_SRCS)
 	cd $(RTL_PATH) && sbt "runMain soc.CoreNSoCVerilog"
+
+$(GEN_PATH)/YsyxSoC.v: $(SCALA_SRCS)
+	cd $(RTL_PATH) && sbt "runMain soc.YsyxSoCVerilog"

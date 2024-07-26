@@ -11,15 +11,16 @@
 #------------------------------------------------
 WORK_DIR  = $(shell git rev-parse --show-toplevel)
 MAKE_DIR  = $(WORK_DIR)/scripts
-PWD_DIR   = $(PWD)
 SIM_ICS_PA_DIR = $(WORK_DIR)/sim/ics-pa
+SIM_YSYX_DIR = $(WORK_DIR)/sim/ysyxSoC
+PWD_DIR   = $(PWD)
 
 #------------------------------------------------
 # Select Flow and Target CPU Design
 #------------------------------------------------
 
-FLOW ?= sim
-TOP  ?= CoreNSoC
+#FLOW ?= sim_ics_pa
+FLOW ?= sim_ysyx
 
 #------------------------------------------------
 # Include flow makefile
@@ -29,8 +30,14 @@ TOP  ?= CoreNSoC
 include $(MAKE_DIR)/kconfig.mk
 
 #flow
-ifeq ($(FLOW), sim)
+ifeq ($(FLOW), sim_ics_pa)
+TOP  ?= CoreNSoC
 include $(SIM_ICS_PA_DIR)/Makefile
+endif
+
+ifeq ($(FLOW), sim_ysyx)
+TOP  ?= ysyxSoCFull
+include $(SIM_YSYX_DIR)/Makefile
 endif
 
 #------------------------------------------------
