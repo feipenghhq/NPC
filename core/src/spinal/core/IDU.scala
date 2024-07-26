@@ -63,8 +63,3 @@ case class IDU(config: RiscCoreConfig) extends Component {
         io.iduData.payload.csrCtrl <> dec.io.csrCtrl
     }
 }
-
-object IDUVerilog extends App {
-    val config = RiscCoreConfig(32, 0x00000000, 32, hasRv32M = true, hasZicsr = true)
-    Config.spinal.generateVerilog(IDU(config))
-}

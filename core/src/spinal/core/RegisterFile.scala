@@ -46,8 +46,3 @@ case class RegisterFile(config: RiscCoreConfig) extends Component {
     io.rs1Data := Mux(io.rs1Addr === 0, B(0, config.xlen bits), regs.readAsync(io.rs1Addr))
     io.rs2Data := Mux(io.rs2Addr === 0, B(0, config.xlen bits), regs.readAsync(io.rs2Addr))
 }
-
-object RegisterFileVerilog extends App {
-    val config = RiscCoreConfig(32, 0x00000000, 32, hasRv32M = true, hasZicsr = true)
-    Config.spinal.generateVerilog(RegisterFile(config))
-}

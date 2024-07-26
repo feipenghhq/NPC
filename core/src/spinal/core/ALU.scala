@@ -80,8 +80,3 @@ case class ALU(config: RiscCoreConfig) extends Component {
     io.result := res.asBits
     io.addResult := addResult
 }
-
-object ALUVerilog extends App {
-    val config = RiscCoreConfig(32, 0x00000000, 32, hasRv32M = true, hasZicsr = true)
-    Config.spinal.generateVerilog(ALU(config))
-}

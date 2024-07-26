@@ -101,8 +101,3 @@ case class IFU(config: RiscCoreConfig) extends Component {
 
     io.ifuData.valid := io.ibus.r.fire | rdataReceived
 }
-
-object IFUVerilog extends App {
-    val config = RiscCoreConfig(32, 0x00000000, 32)
-    Config.spinal.generateVerilog(IFU(config))
-}

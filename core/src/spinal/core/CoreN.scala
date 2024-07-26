@@ -18,9 +18,7 @@ import config._
 import _root_.misc._
 import _root_.bus.Axi4Lite._
 
-
-
-case class CoreN(config: RiscCoreConfig, dpi: Boolean = false) extends Component {
+case class CoreN(config: RiscCoreConfig) extends Component {
     val io = new Bundle {
         val ibus = master(Axi4Lite(config.axi4LiteConfig))
         val dbus = master(Axi4Lite(config.axi4LiteConfig))
@@ -42,17 +40,10 @@ case class CoreN(config: RiscCoreConfig, dpi: Boolean = false) extends Component
     uEXU.io.dbus <> io.dbus
 
     val iduData = uIDU.io.iduData.payload
-
-    if (dpi) {
-        val uCoreNDpi = CoreNDpi(config)
-        uCoreNDpi.io.ebreak := iduData.cpuCtrl.ebreak
-        uCoreNDpi.io.ecall := iduData.cpuCtrl.ecall
-        uCoreNDpi.io.pc := iduData.pc
-    }
-
 }
 
 object CoreNVerilog extends App {
-    val config = RiscCoreConfig(32, 0x80000000L, 32, hasRv32M = true, hasZicsr = true)
+    val axi4LiteConfig = Axi4LiteConfig(addrWidth = 32, dataWidth = 32, axi4 = true)
+    val config = RiscCoreConfig(32, 0x80000000L, 32, axi4LiteConfig=axi4LiteConfig)
     Config.spinal.generateVerilog(CoreN(config)).printPruned()
 }

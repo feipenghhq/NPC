@@ -121,9 +121,3 @@ case class LSU(config: RiscCoreConfig) extends Component {
     }
     io.rvalid := io.dbus.r.fire
 }
-
-
-object LSUVerilog extends App {
-    val config = RiscCoreConfig(32, 0x00000000, 32, hasRv32M = true, hasZicsr = true)
-    Config.spinal.generateVerilog(LSU(config))
-}

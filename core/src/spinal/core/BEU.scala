@@ -48,10 +48,3 @@ case class BEU(config: RiscCoreConfig) extends Component {
     io.branchCtrl.valid := io.branch & res | io.jump
     io.branchCtrl.payload := io.addr
 }
-
-
-object BEUVerilog extends App {
-    val config = RiscCoreConfig(32, 0x00000000, 32, hasRv32M = true, hasZicsr = true)
-    Config.spinal.generateVerilog(BEU(config))
-}
-

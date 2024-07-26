@@ -77,9 +77,3 @@ case class MulDiv(config: RiscCoreConfig) extends Component {
         is(B"110", B"111")         {io.result := divider.remResFinal}
     }
 }
-
-
-object MulDivVerilog extends App {
-    val config = RiscCoreConfig(32, 0x00000000, 32)
-    Config.spinal.generateVerilog(MulDiv(config))
-}

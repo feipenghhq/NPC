@@ -55,8 +55,3 @@ case class TrapCtrl(config: RiscCoreConfig) extends Component {
     io.trap := io.ecall
 
 }
-
-object TrapCtrlVerilog extends App {
-    val config = RiscCoreConfig(32, 0x00000000, 32, hasRv32M = true, hasZicsr = true)
-    Config.spinal.generateVerilog(TrapCtrl(config)).printPruned()
-}

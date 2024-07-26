@@ -109,9 +109,3 @@ case class CSR(config: RiscCoreConfig) extends Component {
     // read data mux
     io.csrRdata := OHMux(readSel, readData)
 }
-
-object CSRVerilog extends App {
-    val config = RiscCoreConfig(32, 0x00000000, 32, hasRv32M = true, hasZicsr = true)
-    Config.spinal.generateVerilog(CSR(config)).printPruned()
-}
-

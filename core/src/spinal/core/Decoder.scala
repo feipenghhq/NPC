@@ -125,28 +125,23 @@ case class Decoder(config: RiscCoreConfig) extends Component {
     // generate control signal for ISA extension
     //-----------------------------------
 
-    // Rv32M
-    if (config.hasRv32M) {
-        cpuCtrl.muldiv := rType & (funct7 === 1)
-    }
+    cpuCtrl.muldiv := rType & (funct7 === 1)
 
     // Zicsr
-    if (config.hasZicsr) {
-        // csrrw/csrrwi should not read CSR if rd = x0
-        // csrrs(i)/csrrc(i) should not write CSR if rs1 = x0 (uimm = 0)
-        val csrRead = cpuCtrl.rdAddr =/= 0
-        val csrWrite = cpuCtrl.rs1Addr =/= 0
+    // csrrw/csrrwi should not read CSR if rd = x0
+    // csrrs(i)/csrrc(i) should not write CSR if rs1 = x0 (uimm = 0)
+    val csrRead = cpuCtrl.rdAddr =/= 0
+    val csrWrite = cpuCtrl.rs1Addr =/= 0
 
-        val csrrw = systemType & (funct3(2 downto 0) === 1)
-        val csrrs = systemType & (funct3(2 downto 0) === 2)
-        val csrrc = systemType & (funct3(2 downto 0) === 3)
+    val csrrw = systemType & (funct3(2 downto 0) === 1)
+    val csrrs = systemType & (funct3(2 downto 0) === 2)
+    val csrrc = systemType & (funct3(2 downto 0) === 3)
 
-        csrCtrl.write := csrrw
-        csrCtrl.set := csrrs & csrWrite
-        csrCtrl.clear := csrrc & csrWrite
-        csrCtrl.read := csrrw & csrRead | csrrs | csrrc
-        csrCtrl.addr := instruction(31 downto 20).asUInt
-    }
+    csrCtrl.write := csrrw
+    csrCtrl.set := csrrs & csrWrite
+    csrCtrl.clear := csrrc & csrWrite
+    csrCtrl.read := csrrw & csrRead | csrrs | csrrc
+    csrCtrl.addr := instruction(31 downto 20).asUInt
 
     //-----------------------------------
     // generate Immediate
@@ -167,16 +162,11 @@ case class Decoder(config: RiscCoreConfig) extends Component {
     val bTypeImm = branchType
     val bTypeImmVal = (instruction(31) ## instruction(7) ## instruction(30 downto 25) ## instruction(11 downto 8) ## False).asSInt.resize(config.xlen)
 
-    val cTypeImm = if (config.hasZicsr) systemType & funct3(2) else False
-    val cTypeImmVal = if (config.hasZicsr) (cpuCtrl.rs1Addr).resize(config.xlen).asSInt else S(0, config.xlen bits)
+    val cTypeImm = systemType & funct3(2)
+    val cTypeImmVal = (cpuCtrl.rs1Addr).resize(config.xlen).asSInt
 
     val immSel   = Vec(iTypeImm,    uTypeImm,    jTypeImm,    sTypeImm,    bTypeImm,    cTypeImm)
     val immValue = Vec(iTypeImmVal, uTypeImmVal, jTypeImmVal, sTypeImmVal, bTypeImmVal, cTypeImmVal)
 
     cpuCtrl.immediate := OHMux(immSel, immValue)
-}
-
-object DecoderVerilog extends App {
-    val config = RiscCoreConfig(32, 0x00000000, 32, hasRv32M = true, hasZicsr = true)
-    Config.spinal.generateVerilog(Decoder(config))
 }

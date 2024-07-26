@@ -88,7 +88,7 @@ case class Axi4Lite(config: Axi4LiteConfig) extends Bundle with IMasterSlave {
         _request(set, w, b)
     }
 
-    def updateSignalName(prefix: String) {
+    def updateSignalName(prefix: String): Axi4Lite = {
         def setName[T<:Bundle](channel: => Stream[T]) {
             channel.valid.setName(prefix + "_" + channel.name + "valid")
             channel.ready.setName(prefix + "_" + channel.name + "ready")
