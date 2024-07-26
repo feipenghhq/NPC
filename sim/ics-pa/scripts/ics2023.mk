@@ -8,9 +8,9 @@
 # Add tests for ICS2023
 
 REPO = $(shell git rev-parse --show-toplevel)
-VERIL_DIR = $(REPO)/sim/verilator
-REF_SO = $(VERIL_DIR)/difftest/nemu/riscv32-nemu-interpreter-so
-include $(VERIL_DIR)/scripts/common.mk
+SIM_ICS_PA_DIR = $(REPO)/sim/ics-pa
+REF_SO = $(SIM_ICS_PA_DIR)/difftest/nemu/riscv32-nemu-interpreter-so
+include $(SIM_ICS_PA_DIR)/scripts/common.mk
 
 # Set the AM (Abstract Machine) directory path. AM is from NJU ICS lab
 ifeq ($(AM_KERNELS_HOME),)

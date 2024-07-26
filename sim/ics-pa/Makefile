@@ -13,9 +13,9 @@
 ## --------------------------------------------------------
 
 REPO = $(shell git rev-parse --show-toplevel)
-OUTPUT_DIR= $(REPO)/output/sim
-VERIL_DIR = $(REPO)/sim/verilator
+OUTPUT_DIR= $(REPO)/output/sim/ics-pa
 BUILD_DIR = $(OUTPUT_DIR)/build
+SIM_ICS_PA_DIR = $(REPO)/sim/ics-pa
 
 $(mkdir -p $(OUTPUT_DIR))
 $(mkdir -p $(BUILD_DIR))
@@ -31,9 +31,9 @@ AR = ar
 ## C source files
 ## --------------------------------------------------------
 
-C_SRCS += $(shell realpath $(shell find $(VERIL_DIR) -name "*.c") --relative-to .)
+C_SRCS += $(shell realpath $(shell find $(SIM_ICS_PA_DIR) -name "*.c") --relative-to .)
 
-C_HDRS += $(shell find $(VERIL_DIR) -name "*.h")
+C_HDRS += $(shell find $(SIM_ICS_PA_DIR) -name "*.h")
 C_HDRS += $(shell find $(REPO)/include/generated -name "*.h")
 
 C_INCS += $(sort $(dir $(C_HDRS)))
@@ -85,11 +85,11 @@ RTL_SRCS += $(addprefix -I,$(VERILOG_INCS))
 ## Verilator Flags
 ## --------------------------------------------------------
 
-CXX_SRCS += $(shell find $(VERIL_DIR) -name "*.cc")
+CXX_SRCS += $(shell find $(SIM_ICS_PA_DIR) -name "*.cc")
 
 CXX_INCS += $(REPO)/include/generated \
-			$(VERIL_DIR)/include \
-			$(VERIL_DIR)/include/testbench
+			$(SIM_ICS_PA_DIR)/include \
+			$(SIM_ICS_PA_DIR)/include/testbench
 
 VERIL_SRCS += $(CXX_SRCS)
 
@@ -143,11 +143,11 @@ $(shell mkdir -p $(OUTPUT_DIR))
 $(shell > $(RESULT))
 
 ### Include the target makefile
-include $(VERIL_DIR)/scripts/target.mk
+include $(SIM_ICS_PA_DIR)/scripts/target.mk
 
 ## --------------------------------------------------------
 ## MISC
 ## --------------------------------------------------------
 
-sim.clean:
+sim_ics_pa.clean:
 	@rm -rf $(OUTPUT_DIR)

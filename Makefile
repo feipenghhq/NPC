@@ -11,8 +11,8 @@
 #------------------------------------------------
 WORK_DIR  = $(shell git rev-parse --show-toplevel)
 MAKE_DIR  = $(WORK_DIR)/scripts
-VERIL_DIR = $(WORK_DIR)/sim/verilator
 PWD_DIR   = $(PWD)
+SIM_ICS_PA_DIR = $(WORK_DIR)/sim/ics-pa
 
 #------------------------------------------------
 # Select Flow and Target CPU Design
@@ -30,7 +30,7 @@ include $(MAKE_DIR)/kconfig.mk
 
 #flow
 ifeq ($(FLOW), sim)
-include $(VERIL_DIR)/Makefile
+include $(SIM_ICS_PA_DIR)/Makefile
 endif
 
 #------------------------------------------------

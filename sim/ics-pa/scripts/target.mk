@@ -12,5 +12,5 @@ ifeq ($(TEST_SUITES), ics2023)
 endif
 
 $(target): $(OBJECT)
-	@make -f $(VERIL_DIR)/scripts/ics2023.mk $@ TOP=$(TOP) TEST_SUITES=$(TEST_SUITES) OUTPUT_DIR=$(OUTPUT_DIR) \
+	@make -f $(SIM_ICS_PA_DIR)/scripts/ics2023.mk $@ TOP=$(TOP) TEST_SUITES=$(TEST_SUITES) OUTPUT_DIR=$(OUTPUT_DIR) \
 		BUILD_DIR=$(BUILD_DIR) OBJECT=$(OBJECT) RESULT=$(RESULT)
