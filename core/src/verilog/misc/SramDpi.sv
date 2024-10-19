@@ -1,7 +1,7 @@
 /* ------------------------------------------------------------------------------------------------
  * Copyright (c) 2023. Heqing Huang (feipenghhq@gmail.com)
  *
- * Project: NRC
+ * Project: NPC
  * Author: Heqing Huang
  * Date Created: 06/22/2024
  *
@@ -27,7 +27,7 @@ module SramDpi #(
 
     logic [XLEN-1:0] _rdata;
 
-    // Delay one clock cycle for data
+    // Delay one clock cycle for read data to mimic synchronous ram
     always @(posedge clk) begin
         if (!rst_b) rdata <= 0;
         else rdata <= _rdata;

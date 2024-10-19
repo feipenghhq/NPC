@@ -1,7 +1,7 @@
 /* ------------------------------------------------------------------------------------------------
  * Copyright (c) 2023. Heqing Huang (feipenghhq@gmail.com)
  *
- * Project: NRC
+ * Project: NPC
  * Author: Heqing Huang
  * Date Created: 6/9/2024
  *
@@ -31,11 +31,13 @@ case class CoreNSoC(config: RiscCoreConfig) extends Component {
 
     val pc = core.uIFU.io.ifuData.payload.pc.pull()
 
+    // DPI for verilator simulation
     val uCoreNDpi = CoreNDpi(config)
     uCoreNDpi.io.ebreak := core.iduData.cpuCtrl.ebreak.pull()
     uCoreNDpi.io.ecall := core.iduData.cpuCtrl.ecall.pull()
     uCoreNDpi.io.pc := pc
 
+    // using two separate sram for instruction and data memory
     if (config.separateSram) {
         val uIfuSram = Axi4LiteSramDpi(config, 1, 0)
         uIfuSram.io.ifetch := True
@@ -45,10 +47,10 @@ case class CoreNSoC(config: RiscCoreConfig) extends Component {
         val uLsuSram = Axi4LiteSramDpi(config, 1, 0)
         uLsuSram.io.ifetch := False
         uLsuSram.io.pc := pc
-        //uLsuSram.io.assignSomeByName(dbus)
-        //uLsuSram.io.rdata.removeAssignments()
         uLsuSram.io.bus <> dbus
-    } else {
+    }
+    // using single sram for instruction and data memory
+    else {
         // arbitrate between the 2 buses
         val axiArbiter = Axi4LiteArbiter(config.axi4LiteConfig, 2, true)
         val sramAxi = Axi4Lite(config.axi4LiteConfig)

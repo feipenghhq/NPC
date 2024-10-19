@@ -1,12 +1,14 @@
 /* ------------------------------------------------------------------------------------------------
  * Copyright (c) 2023. Heqing Huang (feipenghhq@gmail.com)
  *
- * Project: NRC
+ * Project: NPC
  * Author: Heqing Huang
  * Date Created: 6/20/2024
  *
  * ------------------------------------------------------------------------------------------------
  * MulDiv: Multiplier and Divider
+ * open: Currently just use the operator *, /, and % for the calculation.
+ * Will need to replace them with the actual hardware logic
  * ------------------------------------------------------------------------------------------------
  */
 
@@ -24,6 +26,13 @@ case class MulDiv(config: RiscCoreConfig) extends Component {
         val result = out port config.xlenBits
     }
     noIoPrefix()
+
+    // Calculate signed and unsigned mul/div needs different multiplier and divider.
+    // To save resource, we want share the multiplier and divider logic for both
+    // signed and unsigned operation. To achieve this, we add one additional bit to
+    // the original input and extend the original input. For signed operation, we do
+    // signed extension. For unsigned operation, we add 0 so the value are treated as
+    // positive. With the new value, we can use one signed multiplier and divider.
 
     // Note: Currently just use the *, /, and % operator
     val multiplier = new Area {

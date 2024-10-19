@@ -1,12 +1,16 @@
 /* ------------------------------------------------------------------------------------------------
  * Copyright (c) 2023. Heqing Huang (feipenghhq@gmail.com)
  *
- * Project: NRC
+ * Project: NPC
  * Author: Heqing Huang
  * Date Created: 6/10/2024
  *
  * ------------------------------------------------------------------------------------------------
  * BEU: Branch Execution Unit
+ * ------------------------------------------------------------------------------------------------
+ * BEU handles branch and jump instruction
+ *  - The target address is calculated in ALU and some post process is done here
+ *  - The branch result is calculated in this module
  * ------------------------------------------------------------------------------------------------
  */
 
@@ -32,7 +36,7 @@ case class BEU(config: RiscCoreConfig) extends Component {
     // Check branch result
     // --------------------------
 
-    val test = io.src1.asUInt -^ io.src2.asUInt
+    val test = io.src1.asUInt -^ io.src2.asUInt // -^ is subtraction with carry
     val eq = (test === 0)
     val ltu = test.msb
     val lt = (io.src1.msb & ~io.src2.msb) | (~(io.src1.msb ^ io.src2.msb)) & test(config.xlen-1)
@@ -46,5 +50,11 @@ case class BEU(config: RiscCoreConfig) extends Component {
     val res = Mux(inv, ~preRes, preRes)
 
     io.branchCtrl.valid := io.branch & res | io.jump
-    io.branchCtrl.payload := io.addr
+
+    // For jump, the lsb is set to zero (From the RISC-V Spec: The target address is obtained by adding the
+    // sign-extended 12-bit I-immediate to the register rs1, then setting the least-significant bit of the
+    // result to zero.)
+    val addrb = io.addr
+    val addrj = io.addr(config.xlen-1 downto 1) @@ False
+    io.branchCtrl.payload := Mux(io.jump, addrj, addrb)
 }

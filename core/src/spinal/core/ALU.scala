@@ -1,7 +1,7 @@
 /* ------------------------------------------------------------------------------------------------
  * Copyright (c) 2023. Heqing Huang (feipenghhq@gmail.com)
  *
- * Project: NRC
+ * Project: NPC
  * Author: Heqing Huang
  * Date Created: 6/10/2024
  *
@@ -45,22 +45,21 @@ case class ALU(config: RiscCoreConfig) extends Component {
     // Note: We could use just one adder for add/sub operation but since
     // we are not resource limited design, we will just use 2 adders
     val addResult = source1 + source2
-    val subResult = source1 -^ source2
+    val subResult = source1 -^ source2 // -^ is subtraction with carry
 
-    // slt result can be calculated with the following cases instead of using source1 < source2
+    // To save logic slt/sltu their result can be calculated with the following logic instead of using source1 < source2
+    // For slt
     // 1. src1 < 0 and src1 > 0
-    // 2. src1 and src2 are both positive or negative and adder result is negative (src1 < src2)
-    val sltResult = config.xlenUInt
-    sltResult := 0
-    sltResult(0) := source1.msb & ~source2.msb | (~(source1.msb ^ source2.msb)) & subResult(config.xlen - 1)
-
-    // if there is carry, then src1 is smaller then src2 for sltu
-    val sltuResult = config.xlenUInt
-    sltuResult := 0
+    // 2. src1 and src2 are both positive or negative and subtraction result is negative (src1 < src2)
+    val sltResult = U(0, config.xlen bits)
+    sltResult(0) := (source1.msb & ~source2.msb) |
+                    (~(source1.msb ^ source2.msb) & subResult.msb)
+    // For sltu, src1 - src2 < 0
+    val sltuResult = U(0, config.xlen bits)
     sltuResult(0) := subResult.msb
 
     // ------------------------------
-    // Mux out the output
+    // Mux out the result
     // ------------------------------
     val res = config.xlenUInt
     switch(io.opcode) {
@@ -75,7 +74,7 @@ case class ALU(config: RiscCoreConfig) extends Component {
         is(B"01101") {res := sraResult.asUInt}
         is(B"00110") {res := orResult}
         is(B"00111") {res := andResult}
-        default {res := addResult}
+        default      {res := addResult}
     }
     io.result := res.asBits
     io.addResult := addResult

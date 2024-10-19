@@ -1,7 +1,7 @@
 /* ------------------------------------------------------------------------------------------------
  * Copyright (c) 2023. Heqing Huang (feipenghhq@gmail.com)
  *
- * Project: NRC
+ * Project: NPC
  * Author: Heqing Huang
  * Date Created: 6/13/2024
  *
@@ -47,20 +47,30 @@ case class CSR(config: RiscCoreConfig) extends Component {
 
     // create the final CSR write data based on different access type
     val csrwrite = csrCtrl.write | csrCtrl.set | csrCtrl.clear
+    // For csrrw(i), csrWdata is directly written in to csr
     val writeData = io.csrWdata
+    // For csrrs(i), csrWdata is used as a bit mask that specifies bit position to be set in csr.
     val setData = io.csrWdata | io.csrRdata
+    // For csrrc(i), csrWdata is used as a bit mask that specifies bit positions to be cleared in csr.
     val clearData = ~io.csrWdata & io.csrRdata
+    // Final write data
     val wdata = MuxOH(Vec(csrCtrl.write, csrCtrl.set, csrCtrl.clear),
                       Vec(writeData,     setData,     clearData))
 
-    // CSR read data mux placeholder
+    // csr read MUX
     val readSel = ArrayBuffer[Bool]()
     val readData = ArrayBuffer[Bits]()
 
-    // class to hold information for CSR and its field
+    /** A generic CSR class
+     *  It hold the information such as name, address of the csr
+     *  It also field
+     *
+     *  @param csrName csr name
+     *  @param addr    csr address
+     */
     case class CsrReg(csrName: String, addr: Int) {
-        //val reg = config.xlenBits
-        val reg = B(0, xlen bits).allowOverride
+        val reg = B(0, xlen bits).allowOverride // This is not an actual register,
+                                                // it's only wires that groups all the field.
         val hit = csrCtrl.addr === addr
         val read = hit & csrCtrl.read
         val write = hit & csrwrite
@@ -70,9 +80,22 @@ case class CSR(config: RiscCoreConfig) extends Component {
         read.setName(csrName + "Read")
         write.setName(csrName + "Write")
 
+        // add the csr to read MUX logic
         readSel.append(read)
         readData.append(reg)
 
+        /**
+          * Function to add a field to the register
+          * It defines an actual hardware register for the field and perform read/write logic to that field
+          *
+          * @param fieldName Name of the register field. Example: mstatus
+          * @param range     Range of the field in the register. Example: (31 downto 0)
+          * @param rst       Reset value for the field
+          * @param cpuWr     1: cpu write this field through csr logic. 0: cpu don't write to this field
+          * @param rdPort    hardware signal that read this field (usually for config register). null means not needed
+          * @param wr        hardware signal write enable (usually for status register). null means not needed
+          * @param wrPort    hardware signal that write to this field (usually for status register). null means not needed
+          */
         def addField(fieldName: String, range: Range, rst: Int = 0, cpuWr: Boolean = true,
                      rdPort: Bits = null, wr: Bool = null, wrPort: Bits = null): Unit = {
             val field = Reg(Bits(range.length bits)).init(rst).allowUnsetRegToAvoidLatch
@@ -81,7 +104,7 @@ case class CSR(config: RiscCoreConfig) extends Component {
             // write logic
             val wb = WhenBuilder()
             if (cpuWr) wb.when(write) {field := wdata(range)}
-            if (wr != null) wb.when(wr) {field := wrPort}
+            if (wr != null) wb.elsewhen(wr) {field := wrPort}
             // read logic
             if (rdPort != null) {rdPort := field}
         }

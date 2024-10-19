@@ -1,7 +1,7 @@
 /* ------------------------------------------------------------------------------------------------
  * Copyright (c) 2023. Heqing Huang (feipenghhq@gmail.com)
  *
- * Project: NRC
+ * Project: NPC
  * Author: Heqing Huang
  * Date Created: 6/11/2024
  *
@@ -31,6 +31,8 @@ case class LSU(config: RiscCoreConfig) extends Component {
     }
     noIoPrefix()
 
+    // In some design the AXI bus width might be configured to 64 bits while the CPU core
+    // is 32 bit wide. The logic here still works for this case.
     val dataWidth = config.axi4LiteConfig.dataWidth
     val _64bit = dataWidth == 64
     val numByte = dataWidth / 8
@@ -42,7 +44,7 @@ case class LSU(config: RiscCoreConfig) extends Component {
     // ---------------------------------------
     // Write Logic
     // ---------------------------------------
-    // aw
+    // aw channel
     io.dbus.awReq(io.memWrite)
     val aw = io.dbus.aw.payload
     aw.awaddr  := io.addr
@@ -55,13 +57,17 @@ case class LSU(config: RiscCoreConfig) extends Component {
         default {aw.awsize := B"010"} // SW
     }
 
-    // b channel is always ready
+    // b channel
     io.dbus.b.ready := True
 
-    // w
+    // w channel
     io.dbus.wReq(io.memWrite)
     val w = io.dbus.w.payload
     w.wlast  := True
+    // - wstrb can be obtains by using the byte offset (selAddr) to shift
+    //   the mask to the correct position
+    // - data is duplicated and placed in all the chunks. (For example, for store byte, the same byte
+    //   is placed in all the 4 byte in the 4 byte wide data)
     switch(io.opcode(1 downto 0)) {
         is(0) { // SB
             w.wstrb := (B(1, w.wstrb.getWidth bits) |<< selAddr).resized
@@ -82,7 +88,7 @@ case class LSU(config: RiscCoreConfig) extends Component {
     // ---------------------------------------
     // Read logic
     // ---------------------------------------
-    // ar
+    // ar channel
     io.dbus.arReq(io.memRead)
     val ar = io.dbus.ar.payload
     ar.araddr  := io.addr
@@ -95,7 +101,7 @@ case class LSU(config: RiscCoreConfig) extends Component {
         default    {ar.arsize := B"010"} // LW
     }
 
-    // r
+    // r channel
     io.dbus.r.ready := True
     // select the correct data portion based on the address
     val byteData = io.dbus.r.payload.rdata.subdivideIn(8 bits).read(selAddr(selAddr.getWidth-1 downto 0))
@@ -104,16 +110,16 @@ case class LSU(config: RiscCoreConfig) extends Component {
                    else        io.dbus.r.payload.rdata
     switch(io.opcode(2 downto 0)) {
         is(0) { // LB
-            io.rdata := byteData.asSInt.resize(config.xlen bits).asBits // sign extension
+            io.rdata := byteData.asSInt.resize(config.xlen bits).asBits // signed extension
         }
         is(1) { // LH
-            io.rdata := halfData.asSInt.resize(config.xlen bits).asBits // sign extension
+            io.rdata := halfData.asSInt.resize(config.xlen bits).asBits // signed extension
         }
         is(4) { // LBU
-            io.rdata := byteData.resized
+            io.rdata := byteData.resized // unsigned extension
         }
         is(5) { // LHU
-            io.rdata := halfData.resized
+            io.rdata := halfData.resized // unsigned extension
         }
         default { // LW
             io.rdata := wordData.resized

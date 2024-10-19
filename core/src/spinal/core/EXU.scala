@@ -1,12 +1,21 @@
 /* ------------------------------------------------------------------------------------------------
  * Copyright (c) 2023. Heqing Huang (feipenghhq@gmail.com)
  *
- * Project: NRC
+ * Project: NPC
  * Author: Heqing Huang
  * Date Created: 6/10/2024
  *
  * ------------------------------------------------------------------------------------------------
  * EXU: Execution Unit
+ * ------------------------------------------------------------------------------------------------
+ * EXU contains the following logic
+ *  - ALU
+ *  - Branch control (BEU)
+ *  - Multiplier and Divider (MulDiv)
+ *  - Load/Store Unit (LSU)
+ *  - CSR
+ *  - Exception/Interrupt control (TrapCtrl)
+ *  - Register write back selection
  * ------------------------------------------------------------------------------------------------
  */
 package core

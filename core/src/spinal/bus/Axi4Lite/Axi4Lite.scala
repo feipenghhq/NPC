@@ -1,12 +1,12 @@
 /* ------------------------------------------------------------------------------------------------
  * Copyright (c) 2023. Heqing Huang (feipenghhq@gmail.com)
  *
- * Project: NRC
+ * Project: NPC
  * Author: Heqing Huang
  * Date Created: 6/23/2024
  *
  * ------------------------------------------------------------------------------------------------
- * Axi4Lite
+ * Axi4Lite Bus Interface
  * ------------------------------------------------------------------------------------------------
  */
 
@@ -14,12 +14,12 @@ package bus.Axi4Lite
 
 import spinal.core._
 import spinal.lib._
-import scala.reflect.runtime.universe._
 
 case class Axi4LiteConfig(
     addrWidth: Int = 32,
     dataWidth: Int = 32,
-    axi4: Boolean = false // use full axi4 signal, but the protocol is still Axi4Lite
+    axi4:      Boolean = false  // Use full AXI4 signal, but only supports the AXI4-Lite protocol and burst is not supported
+                                // This is mainly used for byte enable control in write request.
 )
 
 case class Axi4LiteAr(config: Axi4LiteConfig) extends Bundle {
@@ -68,9 +68,19 @@ case class Axi4Lite(config: Axi4LiteConfig) extends Bundle with IMasterSlave {
         slave(r, b)
     }
 
-    // Functions to assert request till the handshake complete
-    // set is the condition to set the valid signal
+    /**
+      * Functions to help assert valid signal for the req channel (ar/aw) from other conditions.
+      * It will assert valid till the valid-ready handshake complete in the req channel.
+      * Then it will stops asserting valid till the response (r/b) comes back.
+      * This logic can be used for a request that keeps asserting until the data/response comes back as
+      * you don't want to assert valid again after the ar/aw channel handshake completes for the same request.
+      *
+      * @param set The logic to set the valid signal
+      * @param reqChannel request channel (ar/aw) instance
+      * @param respChannel response channel (r/b) instance
+      */
     private def _request[T <: Bundle, K <: Bundle](set: Bool, reqChannel: Stream[T], respChannel: Stream[K]) {
+        // An indicator to tell us that we have sent the request and waiting for the response
         val sent = RegNextWhen(True, reqChannel.fire) init False setName(reqChannel.name + "Sent")
         sent.clearWhen(respChannel.fire)
         reqChannel.valid := set & ~sent
@@ -88,6 +98,11 @@ case class Axi4Lite(config: Axi4LiteConfig) extends Bundle with IMasterSlave {
         _request(set, w, b)
     }
 
+    /**
+      * Functions to help rename the AXI signals in the generated verilog code
+      *
+      * @param prefix the prefix name to the AXI signal
+      */
     def updateSignalName(prefix: String): Axi4Lite = {
         def setName[T<:Bundle](channel: => Stream[T]) {
             channel.valid.setName(prefix + "_" + channel.name + "valid")
