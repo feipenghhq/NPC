@@ -33,7 +33,7 @@ case class YsyxSoC(config: RiscCoreConfig) extends Component {
     val ibus = Axi4Lite(config.axi4LiteConfig)
     val dbus = Axi4Lite(config.axi4LiteConfig)
 
-    val axiArbiter = Axi4LiteArbiter(config.axi4LiteConfig, 2, true)
+    val axiArbiter = Axi4LiteArbiter(config.axi4LiteConfig, 2, false)
     axiArbiter.io.input <> Vec(ibus, dbus)
     axiArbiter.io.output <> io.host
 

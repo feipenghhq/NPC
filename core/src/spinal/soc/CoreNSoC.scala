@@ -52,7 +52,7 @@ case class CoreNSoC(config: RiscCoreConfig) extends Component {
     // using single sram for instruction and data memory
     else {
         // arbitrate between the 2 buses
-        val axiArbiter = Axi4LiteArbiter(config.axi4LiteConfig, 2, true)
+        val axiArbiter = Axi4LiteArbiter(config.axi4LiteConfig, 2, false)
         val sramAxi = Axi4Lite(config.axi4LiteConfig)
         axiArbiter.io.input <> Vec(ibus, dbus)
         axiArbiter.io.output <> sramAxi
