@@ -6,11 +6,11 @@
  * Date Created: 06/22/2024
  *
  * ------------------------------------------------------------------------------------------------
- * SramDpi: Sram using verilator dpi
+ * RamDpi: Ram using verilog dpi
  * ------------------------------------------------------------------------------------------------
  */
 
-module SramDpi #(
+module RamDpi #(
     parameter XLEN      = 32
 ) (
     input  logic                clk,
