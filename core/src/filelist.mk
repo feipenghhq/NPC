@@ -14,13 +14,13 @@ GEN_PATH = $(RTL_PATH)/src/gen
 # Verilog source file
 ifeq ($(TOP),CoreNSoC)
 VERILOG_SRCS += $(RTL_PATH)/src/gen/CoreNSoC.v
-VERILOG_SRCS += $(RTL_PATH)/src/verilog/core/CoreNDpi.sv
-VERILOG_SRCS += $(RTL_PATH)/src/verilog/misc/SramDpi.sv
+VERILOG_SRCS += $(RTL_PATH)/src/verilog/dpi/CoreNDpi.sv
+VERILOG_SRCS += $(RTL_PATH)/src/verilog/dpi/RamDpi.sv
 endif
 
 ifeq ($(TOP),ysyxSoCFull)
 VERILOG_SRCS += $(RTL_PATH)/src/gen/YsyxSoC.v
-VERILOG_SRCS += $(RTL_PATH)/src/verilog/core/CoreNDpi.sv
+VERILOG_SRCS += $(RTL_PATH)/src/verilog/dpi/CoreNDpi.sv
 endif
 
 SCALA_SRCS += $(wildcard $(RTL_PATH)/src/spinal/*/*.scala)

@@ -7,6 +7,7 @@
  *
  * ------------------------------------------------------------------------------------------------
  * LSU: Load Store Unit
+ * Currently the LSU support only Multiple Cycle CPU
  * ------------------------------------------------------------------------------------------------
  */
 
@@ -19,95 +20,106 @@ import _root_.bus.Axi4Lite.Axi4Lite
 
 case class LSU(config: RiscCoreConfig) extends Component {
     val io = new Bundle {
-        val dbus = master(Axi4Lite(config.axi4LiteConfig))
-        val memRead = in port Bool()
+        val dbus     = master(Axi4Lite(config.axi4LiteConfig))
+        val memRead  = in port Bool()
         val memWrite = in port Bool()
-        val opcode = in port Bits(3 bits)
-        val addr = in port config.xlenUInt
-        val wdata = in port config.xlenBits
-        val rdata = out port config.xlenBits
-        val wready = out port Bool()
-        val rvalid = out port Bool()
+        val opcode   = in port Bits(3 bits)
+        val addr     = in port config.xlenUInt
+        val wdata    = in port config.xlenBits
+        val rdata    = out port config.xlenBits
+        val wready   = out port Bool()
+        val rvalid   = out port Bool()
     }
     noIoPrefix()
 
-    // In some design the AXI bus width might be configured to 64 bits while the CPU core
-    // is 32 bit wide. The logic here still works for this case.
-    val dataWidth = config.axi4LiteConfig.dataWidth
-    val _64bit = dataWidth == 64
-    val numByte = dataWidth / 8
-    val numHalf = dataWidth / 16
-    val numWord = dataWidth / 32
+    val numByte = config.xlen / 8
+    val numHalf = config.xlen / 16
+    val numWord = config.xlen / 32
 
-    val selAddr = if (_64bit) io.addr(2 downto 0) else io.addr(1 downto 0)
+    val selAddr = io.addr(1 downto 0)
 
     // ---------------------------------------
     // Write Logic
     // ---------------------------------------
-    // aw channel
-    io.dbus.awReq(io.memWrite)
-    val aw = io.dbus.aw.payload
-    aw.awaddr  := io.addr
-    aw.awid    := 0
-    aw.awlen   := 0
-    aw.awburst := 0
-    switch(io.opcode(1 downto 0)) {
-        is(0)   {aw.awsize := B"000"} // SB
-        is(1)   {aw.awsize := B"001"} // SH
-        default {aw.awsize := B"010"} // SW
-    }
 
-    // b channel
-    io.dbus.b.ready := True
+    // Notes:
+    // 1. AW and W channel are synchronized meaning awvalid and wvalid assert at the same cycle
+    // 2. AW and W channel can handle different back-pressure (different awready and wready)
+
+    // aw channel
+    val aw = io.dbus.aw.payload
+    // register the AXI valid instead of using combo logic this will create addition clock latency
+    // but meet AXI requirement and achieve better timing
+    val awPending = RegNextWhen(True, io.dbus.aw.fire) clearWhen(io.dbus.b.fire) init False
+    // awPending make that sure we don't assert valid again when AW handshake complete.
+    val awvalid = RegNext(io.memWrite & ~awPending) init False
+    io.dbus.aw.valid := awvalid
+    aw.awaddr := io.addr
 
     // w channel
-    io.dbus.wReq(io.memWrite)
     val w = io.dbus.w.payload
-    w.wlast  := True
-    // - wstrb can be obtains by using the byte offset (selAddr) to shift
-    //   the mask to the correct position
-    // - data is duplicated and placed in all the chunks. (For example, for store byte, the same byte
-    //   is placed in all the 4 byte in the 4 byte wide data)
+    val wPending = RegNextWhen(True, io.dbus.w.fire) clearWhen(io.dbus.b.fire) init False
+    val wvalid = RegNext(io.memWrite & ~wPending) init False
+    io.dbus.w.valid := wvalid
+    // wstrb can be obtains by using the byte offset (selAddr) to shift the mask to the correct position
+    // data is duplicated and placed in all the chunks
     switch(io.opcode(1 downto 0)) {
         is(0) { // SB
-            w.wstrb := (B(1, w.wstrb.getWidth bits) |<< selAddr).resized
-            w.wdata := (io.wdata(7 downto 0) #* numByte).resized
+            w.wstrb := B(1, w.wstrb.getWidth bits) |<< selAddr
+            w.wdata := io.wdata(7 downto 0) #* numByte
         }
         is(1) { // SH
-            w.wstrb := (B(3, w.wstrb.getWidth bits) |<< selAddr).resized
-            w.wdata := (io.wdata(15 downto 0) #* numHalf).resized
+            w.wstrb := B(3, w.wstrb.getWidth bits) |<< selAddr
+            w.wdata := io.wdata(15 downto 0) #* numHalf
         }
         default { // SW
-            w.wstrb := (B(15, w.wstrb.getWidth bits) |<< selAddr).resized
-            w.wdata := (io.wdata #* numWord).resized
+            w.wstrb := B(15, w.wstrb.getWidth bits) |<< selAddr
+            w.wdata := io.wdata #* numWord
         }
     }
 
+
+    // b channel
+    // we can move forward when the write response comes back
+    // and for now, we just ignore the write response result and treat write as always successful
     io.wready := io.dbus.b.fire
+
+    // IFU is always capable of consuming the write response
+    if (config.lsuBreadyDelay == 0) {
+        io.dbus.b.ready := True
+    }
+    // Add delay to test back-pressure on axi bus
+    else {
+        val bready = Timeout(config.lsuBreadyDelay)
+        when(io.dbus.aw.fire) {bready.clear()}
+        io.dbus.b.ready := bready
+    }
 
     // ---------------------------------------
     // Read logic
     // ---------------------------------------
     // ar channel
-    io.dbus.arReq(io.memRead)
     val ar = io.dbus.ar.payload
-    ar.araddr  := io.addr
-    ar.arid    := 0
-    ar.arlen   := 0
-    ar.arburst := 0
-    switch(io.opcode(2 downto 0)) {
-        is(0, 4)   {ar.arsize := B"000"} // LB/LBU
-        is(1, 5)   {ar.arsize := B"001"} // LH/LHU
-        default    {ar.arsize := B"010"} // LW
-    }
+    val arPending = RegNextWhen(True, io.dbus.ar.fire) clearWhen(io.dbus.r.fire) init False
+    val arvalid = RegNext(io.memRead & ~arPending) init False
+    io.dbus.ar.valid := arvalid
+    ar.araddr := io.addr
 
     // r channel
-    io.dbus.r.ready := True
+    // IFU is always capable of consuming the write response
+    if (config.lsuRreadyDelay == 0) {
+        io.dbus.r.ready := True
+    }
+    // Add delay to test back-pressure on axi bus
+    else {
+        val rready = Timeout(config.lsuRreadyDelay)
+        when(io.dbus.ar.fire) {rready.clear()}
+        io.dbus.r.ready := rready
+    }
     // select the correct data portion based on the address
     val byteData = io.dbus.r.payload.rdata.subdivideIn(8 bits).read(selAddr(selAddr.getWidth-1 downto 0))
     val halfData = io.dbus.r.payload.rdata.subdivideIn(16 bits).read(selAddr(selAddr.getWidth-1 downto 1))
-    val wordData = if (_64bit) io.dbus.r.payload.rdata.subdivideIn(32 bits).read(selAddr(selAddr.getWidth-1 downto 2))
-                   else        io.dbus.r.payload.rdata
+    val wordData = io.dbus.r.payload.rdata
     switch(io.opcode(2 downto 0)) {
         is(0) { // LB
             io.rdata := byteData.asSInt.resize(config.xlen bits).asBits // signed extension

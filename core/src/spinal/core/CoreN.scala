@@ -15,7 +15,6 @@ package core
 import spinal.core._
 import spinal.lib._
 import config._
-import _root_.misc._
 import _root_.bus.Axi4Lite._
 
 case class CoreN(config: RiscCoreConfig) extends Component {
@@ -43,7 +42,7 @@ case class CoreN(config: RiscCoreConfig) extends Component {
 }
 
 object CoreNVerilog extends App {
-    val axi4LiteConfig = Axi4LiteConfig(addrWidth = 32, dataWidth = 32, axi4 = true)
+    val axi4LiteConfig = Axi4LiteConfig(addrWidth = 32, dataWidth = 32)
     val config = RiscCoreConfig(32, 0x80000000L, 32, axi4LiteConfig=axi4LiteConfig)
     Config.spinal.generateVerilog(CoreN(config)).printPruned()
 }

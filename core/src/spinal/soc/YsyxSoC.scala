@@ -16,7 +16,6 @@ import spinal.core._
 import spinal.lib._
 import core._
 import config.RiscCoreConfig
-import _root_.misc._
 import _root_.bus.Axi4Lite._
 
 case class YsyxSoC(config: RiscCoreConfig) extends Component {
@@ -58,7 +57,7 @@ object YsyxConfig {
 }
 
 object YsyxSoCVerilog extends App {
-    val axi4LiteConfig = Axi4LiteConfig(addrWidth = 32, dataWidth = 64, axi4 = true)
+    val axi4LiteConfig = Axi4LiteConfig(addrWidth = 32, dataWidth = 64)
     val config = RiscCoreConfig(32, 0x20000000L, 32, axi4LiteConfig=axi4LiteConfig)
     YsyxConfig.spinal.generateVerilog(YsyxSoC(config)).printPruned()
 }

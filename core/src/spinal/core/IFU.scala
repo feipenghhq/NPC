@@ -11,6 +11,7 @@
  * IFU contains the following logic:
  *  - Program Counter (PC)
  *  - Instruction memory read control
+ * Currently the IFU support only Multiple Cycle CPU
  * ------------------------------------------------------------------------------------------------
  */
 
@@ -55,48 +56,53 @@ case class IFU(config: RiscCoreConfig) extends Component {
     }
 
     // -------------------------------------
-    // Instruction memory read control
+    // Instruction memory read control (AXI bus)
     // -------------------------------------
 
-    // An indicator to tell that we are out of reset and can start reading the instruction memory
-    val start = RegNext(True) init False
-    start.allowUnsetRegToAvoidLatch()
+    // An indicator to tell that we are out of reset and can start sending the first request
+    val start = Reg(Bool) init False
+    start := True
 
-    // instruction read request
-    val req = Reg(Bool) init True
-    // Start to request for new instruction when the current instruction has been taken by the downstream logic
-    when(io.ifuData.fire) {
-        req := True
-    // Clear the request when the instruction comes back
-    }.elsewhen(io.ibus.r.fire) {
-        req := False
+    val arvalid = Reg(Bool) init False
+    // assert arvalid when
+    // 1. cpu is out of rest
+    // 2. the downstream logic has consumed the instruction
+    when(start.rise() || io.ifuData.fire) {
+        arvalid := True
+    }
+    // lower the arvalid when the AR channel handshake complete
+    .elsewhen(io.ibus.ar.fire) {
+        arvalid := False
     }
 
-    // Read channel
-    val ar = io.ibus.ar.payload
-    ar.araddr  := pc
-    ar.arid    := 0
-    ar.arlen   := 0
-    ar.arsize  := B"010" // always read 4 byte
-    ar.arburst := 0
-    io.ibus.arReq(start & req)
-    io.ibus.r.ready := True // always able to take the read data
+    io.ibus.ar.valid := arvalid
+    io.ibus.ar.payload.araddr := pc
+
+    // IFU is always able to take the read response data
+    // This is guaranteed because we only send one request till the returned instruction has been consumed
+    if (config.ifuRreadyDelay == 0) {
+        io.ibus.r.ready := True
+    }
+    // Add delay to test back-pressure on axi bus
+    else {
+        val rready = Timeout(config.ifuRreadyDelay)
+        when(io.ibus.ar.fire) {rready.clear()}
+        io.ibus.r.ready := rready
+    }
+
     // Write is not used for instruction memory
     io.ibus.aw <> io.ibus.aw.getZero
     io.ibus.w <> io.ibus.w.getZero
     io.ibus.b <> io.ibus.b.getZero
 
-    // Need additional register to store the instruction comes back from instruction memory
-    // when the downstream stage is not ready to take the new instruction.
-    // This is needed because the memory does not preserve the output data.
+    // Need additional buffer to store the instruction coming back from memory to handle the stall cases
+    // When the downstream logic is not able to consume instruction, store it in the buffer.
+    // When it is ready, then forward the instruction from the buffer.
     val instBuffer = RegNextWhen(io.ibus.r.payload.rdata(config.xlen-1 downto 0), io.ibus.r.fire)
-
-    // The instruction is either from the instruction memory or the buffer.
-    // When read data come back from memory, select it as the instruction.
-    // In all the other cycles, select the instruction stored in the buffer.
+    val instBufferValid = RegNextWhen(True, io.ibus.r.fire & ~io.ifuData.fire).clearWhen(io.ifuData.fire)
     val instruction = config.xlenBits
-    instruction.addAttribute(public)
     instruction := Mux(io.ibus.r.fire, io.ibus.r.payload.rdata(config.xlen-1 downto 0), instBuffer)
+    instruction.addAttribute(public)
 
     // -----------------------------
     // IFU data logic
@@ -107,8 +113,5 @@ case class IFU(config: RiscCoreConfig) extends Component {
     // -----------------------------
     // IFU data handshake
     // -----------------------------
-    // set the IFU valid when we get the AXI read data, clear it when it is sent to the next stage
-    val rdataReceived = RegNextWhen(True, io.ibus.r.fire)
-    rdataReceived.clearWhen(io.ifuData.fire)
-    io.ifuData.valid := io.ibus.r.fire | rdataReceived
+    io.ifuData.valid := io.ibus.r.fire | instBufferValid
 }

@@ -15,7 +15,7 @@ package soc
 import spinal.core._
 import spinal.lib._
 import config._
-import _root_.misc._
+import common._
 import _root_.bus.Axi4Lite._
 import core.CoreN
 import core.CoreNVerilog.axi4LiteConfig
@@ -39,28 +39,28 @@ case class CoreNSoC(config: RiscCoreConfig) extends Component {
 
     // using two separate sram for instruction and data memory
     if (config.separateSram) {
-        val uIfuSram = Axi4LiteSramDpi(config, 1, 0)
+        val uIfuSram = Axi4LiteRam(config, RamType.DPI)
         uIfuSram.io.ifetch := True
         uIfuSram.io.pc := pc
-        uIfuSram.io.bus <> ibus
+        uIfuSram.io.axi4l <> ibus
 
-        val uLsuSram = Axi4LiteSramDpi(config, 1, 0)
+        val uLsuSram = Axi4LiteRam(config, RamType.DPI)
         uLsuSram.io.ifetch := False
         uLsuSram.io.pc := pc
-        uLsuSram.io.bus <> dbus
+        uLsuSram.io.axi4l <> dbus
     }
     // using single sram for instruction and data memory
     else {
         // arbitrate between the 2 buses
         val axiArbiter = Axi4LiteArbiter(config.axi4LiteConfig, 2, false)
-        val sramAxi = Axi4Lite(config.axi4LiteConfig)
+        val sramAxi4l = Axi4Lite(config.axi4LiteConfig)
         axiArbiter.io.input <> Vec(ibus, dbus)
-        axiArbiter.io.output <> sramAxi
+        axiArbiter.io.output <> sramAxi4l
 
-        val sram = Axi4LiteSramDpi(config, 1, 0)
+        val sram = Axi4LiteRam(config, RamType.DPI)
         sram.io.ifetch := ibus.ar.valid
         sram.io.pc := pc
-        sram.io.bus <> sramAxi
+        sram.io.axi4l <> sramAxi4l
     }
 }
 
@@ -81,7 +81,8 @@ case class CoreNDpi (config: RiscCoreConfig) extends BlackBox {
 }
 
 object CoreNSoCVerilog extends App {
-    val axi4LiteConfig = Axi4LiteConfig(addrWidth = 32, dataWidth = 32, axi4 = true)
-    val config = RiscCoreConfig(32, 0x80000000L, 32, axi4LiteConfig=axi4LiteConfig)
+    val axi4LiteConfig = Axi4LiteConfig(addrWidth = 32, dataWidth = 32)
+    val config = RiscCoreConfig(32, 0x80000000L, 32, separateSram=true, axi4LiteConfig=axi4LiteConfig,
+                                ifuRreadyDelay=5, lsuBreadyDelay=5, lsuRreadyDelay=5)
     Config.spinal.generateVerilog(CoreNSoC(config)).printPruned()
 }
