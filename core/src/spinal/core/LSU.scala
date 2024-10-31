@@ -52,14 +52,14 @@ case class LSU(config: RiscCoreConfig) extends Component {
     // but meet AXI requirement and achieve better timing
     val awPending = RegNextWhen(True, io.dbus.aw.fire) clearWhen(io.dbus.b.fire) init False
     // awPending make that sure we don't assert valid again when AW handshake complete.
-    val awvalid = RegNext(io.memWrite & ~awPending) init False
+    val awvalid = RegNextWhen(True, io.memWrite & ~awPending) clearWhen(io.dbus.aw.fire) init False
     io.dbus.aw.valid := awvalid
     aw.awaddr := io.addr
 
     // w channel
     val w = io.dbus.w.payload
     val wPending = RegNextWhen(True, io.dbus.w.fire) clearWhen(io.dbus.b.fire) init False
-    val wvalid = RegNext(io.memWrite & ~wPending) init False
+    val wvalid = RegNextWhen(True, io.memWrite & ~wPending) clearWhen(io.dbus.w.fire) init False
     io.dbus.w.valid := wvalid
     // wstrb can be obtains by using the byte offset (selAddr) to shift the mask to the correct position
     // data is duplicated and placed in all the chunks
