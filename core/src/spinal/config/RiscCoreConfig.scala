@@ -26,7 +26,6 @@ case class RiscCoreConfig(
     axi4LiteConfig: Axi4LiteConfig,     // AXI4 Lite bus configuration
 
     // test related parameter
-    ifuRreadyDelay: Int = 0,            // Add delay to IFU rready
     lsuRreadyDelay: Int = 0,            // Add delay to LSU rready
     lsuBreadyDelay: Int = 0,            // Add delay to LSU bready
 ) {

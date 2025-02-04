@@ -19,6 +19,7 @@ package core
 
 import spinal.core._
 import spinal.lib._
+import spinal.lib.fsm._
 import spinal.core.Verilator._
 import config._
 import _root_.bus.Axi4Lite._
@@ -56,62 +57,70 @@ case class IFU(config: RiscCoreConfig) extends Component {
     }
 
     // -------------------------------------
-    // Instruction memory read control (AXI bus)
+    // Instruction memory read control
     // -------------------------------------
 
-    // An indicator to tell that we are out of reset and can start sending the first request
-    val start = Reg(Bool) init False
-    start := True
+    val ifuCtrl = new StateMachine {
+        setEncoding(binaryOneHot)
+        val IDLE: State = makeInstantEntry()
+        val REQ, DATA, STALL: State = new State
 
-    val arvalid = Reg(Bool) init False
-    // assert arvalid when
-    // 1. cpu is out of rest
-    // 2. the downstream logic has consumed the instruction
-    when(start.rise() || io.ifuData.fire) {
-        arvalid := True
-    }
-    // lower the arvalid when the AR channel handshake complete
-    .elsewhen(io.ibus.ar.fire) {
-        arvalid := False
+        val instruction = config.xlenBits
+        val instBuffer = Reg(config.xlenBits)
+        instruction := io.ibus.r.payload.rdata
+
+        IDLE.whenIsActive {
+            goto(REQ)
+        }
+
+        REQ.whenIsActive {
+            // When AR channel handshake complete goto DATA state to wait for read data
+            when(io.ibus.ar.ready) {
+                goto(DATA)
+            }
+        }
+
+        DATA.whenIsActive {
+            // when data is returned and ifu can move forward, goto REQ state again
+            when(io.ibus.r.valid && io.ifuData.ready) {
+                goto(REQ)
+            }
+            // when data is returned but ifu is stalled, goto STALL state
+            // meanwhile, store the return data (instruction) to instruction buffer
+            .elsewhen(io.ibus.r.valid && !io.ifuData.ready) {
+                instBuffer := io.ibus.r.payload.rdata
+                goto(STALL)
+            }
+        }
+
+        STALL.whenIsActive {
+            // instruction is selected from instruction buffer
+            instruction := instBuffer
+            // ifu is ready to go, go to REQ state again
+            when(io.ifuData.ready) {
+                goto(REQ)
+            }
+        }
     }
 
-    io.ibus.ar.valid := arvalid
+    io.ibus.ar.valid := ifuCtrl.isActive(ifuCtrl.REQ) // assert arvalid at REQ state
     io.ibus.ar.payload.araddr := pc
-
-    // IFU is always able to take the read response data
-    // This is guaranteed because we only send one request till the returned instruction has been consumed
-    if (config.ifuRreadyDelay == 0) {
-        io.ibus.r.ready := True
-    }
-    // Add delay to test back-pressure on axi bus
-    else {
-        val rready = Timeout(config.ifuRreadyDelay)
-        when(io.ibus.ar.fire) {rready.clear()}
-        io.ibus.r.ready := rready
-    }
+    io.ibus.r.ready := True // always ready to receive data
 
     // Write is not used for instruction memory
     io.ibus.aw <> io.ibus.aw.getZero
     io.ibus.w <> io.ibus.w.getZero
     io.ibus.b <> io.ibus.b.getZero
 
-    // Need additional buffer to store the instruction coming back from memory to handle the stall cases
-    // When the downstream logic is not able to consume instruction, store it in the buffer.
-    // When it is ready, then forward the instruction from the buffer.
-    val instBuffer = RegNextWhen(io.ibus.r.payload.rdata(config.xlen-1 downto 0), io.ibus.r.fire)
-    val instBufferValid = RegNextWhen(True, io.ibus.r.fire & ~io.ifuData.fire).clearWhen(io.ifuData.fire)
-    val instruction = config.xlenBits
-    instruction := Mux(io.ibus.r.fire, io.ibus.r.payload.rdata(config.xlen-1 downto 0), instBuffer)
-    instruction.addAttribute(public)
-
     // -----------------------------
     // IFU data logic
     // -----------------------------
     io.ifuData.pc := pc
-    io.ifuData.instruction := instruction
+    io.ifuData.instruction := ifuCtrl.instruction
 
     // -----------------------------
     // IFU data handshake
     // -----------------------------
-    io.ifuData.valid := io.ibus.r.fire | instBufferValid
+    io.ifuData.valid := io.ibus.r.fire | ifuCtrl.isActive(ifuCtrl.STALL)
+
 }
