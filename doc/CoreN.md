@@ -80,10 +80,12 @@ Parameters are defined in scala class `RiscCoreConfig`
 
 The cpu core is divided into different modules based on the function. The major sub-components are IFU, IDU, and EXU.
 
-IFU is responsible of fetching the instructions from the memory. IDU is responsible for decoding the instruction and
-generating control signals. EXU is responsible for executing the instructions. The 3 modules are connected using valid-
-ready handshake. If a downstream logic need more clock cycles to complete an instruction, it will back-pressure the up-
-stream logic by de-asserting the ready signal. There is also a register file that contains the registers.
+- IFU is responsible of fetching the instructions from the memory.
+- IDU is responsible for decoding the instruction and generating control signals. It also contains Register File.
+- EXU is responsible for executing the instructions. It contains various execution units such as ALU, Memory Control.
+
+The 3 modules are connected using valid-ready handshake. If a downstream logic need more clock cycles to complete an
+instruction, it will back-pressure the up-stream logic by de-asserting the ready signal.
 
 
 Here are all the components in the design:
