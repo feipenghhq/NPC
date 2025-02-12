@@ -24,6 +24,13 @@
     - [Implementation](#implementation-6)
   - [LSU](#lsu)
     - [Interface](#interface-6)
+    - [Implementation](#implementation-7)
+  - [TrapCtrl](#trapctrl)
+    - [Interface](#interface-7)
+    - [Implementation](#implementation-8)
+  - [MulDiv](#muldiv)
+    - [Interface](#interface-8)
+    - [Implementation](#implementation-9)
 
 
 ## IFU
@@ -405,3 +412,168 @@ result on determines the branch decision.
 ## LSU
 
 ### Interface
+
+| Name     | Width/Type | Direction     | Description                          |
+| -------- | ---------- | ------------- | ------------------------------------ |
+| dbus     | AXI4Lite   | Stream (Host) | Data Memory Bus - AXI4Lite interface |
+| memRead  | 1 bit      | Input         | memory read                          |
+| memWrite | 1 bit      | Input         | memory write                         |
+| opcode   | 3 bits     | Input         | opcode for memory instruction        |
+| addr     | xlen bits  | Input         | memory address                       |
+| wdata    | xlen bits  | Input         | memory write data                    |
+| rdata    | xlen bits  | Output        | memory read data                     |
+| wready   | xlen bits  | Output        | memory write ready                   |
+| rvalid   | xlen bits  | Output        | memory read valid                    |
+
+opcode encoding can be found in [opcode](#opcode) session.
+
+### Implementation
+
+LSU stands for Load Store Unit. It's responsible for generating request to the memory and process the read data.
+The cpu use AXI4Lite interface for data memory access. In order to support byte access, we introduced `WSTRB`
+field in W channel in our AXI4Lite interface.
+
+A state machine is used to control the AXI4Lite bus protocol.
+
+#### LSU State Machine
+
+State machine
+
+![State Machine](./assets/LSU_State.drawio.png)
+
+State
+
+| State  | Description                                                                                            |
+| ------ | ------------------------------------------------------------------------------------------------------ |
+| IDLE   | **Idle state.**  This is the state when cpu is first boot and/or under reset.                          |
+| RD_REQ | **Read Request state.** Assert the arvalid signal to send the read request to the memory.              |
+| WR_REQ | **Write Request state.** Assert the awvalid and wvalid signal to send the write request to the memory. |
+| DATA   | **Data state.**  Wait for the read data from the memory.                                               |
+| RESP   | **Response state.**  Wait for the write response from the memory.                                      |
+
+State Transition
+
+| Current State | Next State | Condition | Description                          |
+| ------------- | ---------- | --------- | ------------------------------------ |
+| IDLE          | RD_REQ     | memRead   | Read instruction                     |
+| IDLE          | WR_REQ     | memWrite  | Write instruction                    |
+| RD_REQ        | DATA       | arready   | AR channel handshake complete.       |
+| WR_REQ        | RESP       | wr_cmp    | AW and W channel handshake complete. |
+| DATA          | IDLE       | rvalid    | Receive read data                    |
+| RESP          | IDLE       | bvalid    | Receive write response               |
+
+For write request, there are two channels: WR and W. WR_REQ can switch to RESP only when both of the AW and W
+channel handshake complete. This adds complexity for state control as AW and W channel can back-pressure separately
+as per AXI spec. Signal `wr_cmp` is introduced to indicate that both AW and W channel has completed handshake. Two
+additional registers `aw_cmp` and `w_cmp` are introduced to indicate that the AW and W channel has completed their
+handshake separately.
+
+With the help of the 2 additional register, we can come up with the logic for `wr_cmp`:
+
+```verilog
+assign wr_cmp = awready & wready | // both the AW and W channels are ready to receive request
+                awready & w_cmp  | // AW channel is ready and W channels has completed the handshake
+                wready  & aw_cmp;  // W channel is ready and AW channel has completed the handshake
+```
+
+#### Data Processing
+
+Based on the access type (full word, half word or byte). Data needs to be manipulated for both the read and the write.
+
+For read, the read data from the memory needs to be extended based on the instruction type.
+
+For write, the write data need to be places into the bus correctly, and the write strobe (WSTRB) need to be generated.
+
+## TrapCtrl
+
+### Interface
+
+| Name      | Width/Type | Direction   | Description                  |
+| --------- | ---------- | ----------- | ---------------------------- |
+| csrRdPort | CsrRdPort  | Input       | data read from CSR           |
+| csrWrPort | CsrWrPort  | Output      | data write to CSR            |
+| ecall     | 1 bit      | Input       | environment call instruction |
+| mret      | 1 bit      | Input       | mret  instruction            |
+| pc        | xlen bits  | Input       | Current instruction PC       |
+| trapCtrl  | xlen bits  | Flow (Host) | Trap valid and target PC     |
+| trap      | 1 bits     | Output      | Indicate trap valid          |
+
+#### CsrRdPort
+
+This interface carries some CSR register value. These are needed information for exception/interrupt handling.
+
+| Name  | Width | Description                                   |
+| ----- | ----- | --------------------------------------------- |
+| mtvec | xlen  | Target PC when exception/interrupt occur      |
+| mepc  | xlen  | PC for the instruction that trigger exception |
+
+#### CsrWrPort
+
+This interface carries the status from exception/interrupt. The corresponding CSR registers are updated when exception/
+interrupt occurs.
+
+| Name   | Width | Description                                   |
+| ------ | ----- | --------------------------------------------- |
+| mcause | xlen  | exception/interrupt cause ID                  |
+| mepc   | xlen  | PC for the instruction that trigger exception |
+
+### Implementation
+
+This module is responsible for process all the exception and interrupt. The implementation follows the exception and
+interrupt handling defined in the RISC-V Spec:
+
+Entering: When an exception/interrupt occurs, the following actions are taken:
+1. Update `mepc` CSR register to the PC value of the instruction that triggers the event.
+2. Update `mcause` CSR register based on the trigger type.
+3. Jump to the new address defined by `mtvec` CSR register.
+
+Exiting: If the instruction is mret, it indicates that exception/interrupt has been processed by OS and the CPU need to
+return to previous instruction (or maybe a new instruction):
+1. Jump to the address defined by `mepc` CSR register.
+
+## MulDiv
+
+### Interface
+
+| Name   | Width/Type | Direction | Description                 |
+| ------ | ---------- | --------- | --------------------------- |
+| opcode | 3 bits     | input     | mul/div opcode from Decoder |
+| src1   | xlen bits  | input     | operand 1                   |
+| src2   | xlen bits  | input     | operand 2                   |
+| result | xlen bits  | output    | result                      |
+
+### Implementation
+
+This module is responsible for process multiplication and division instruction in RV32M extension.
+
+Currently the implementation use HDL operator `*`, `/`, and `%` so all the operation is done in the same clock cycle.
+This is a temporary implementation to keep the project going without spending too much time on implementing the actual
+multiplier and divider. It will be replaced with the real multiplier and divider in later design phase.
+
+#### Resource saving
+
+The instruction have both signed and unsigned operation and they require different hardware. If we go with using different
+hardware for them then we will end up having 2 multipliers and 2 dividers. To save resource, it would be preferable to
+only use 1 set of multiplier and divider.
+
+In order to achieve that, we can do a small trick. Let's treat all the numbers and operations as signed operation. And
+we introduce one more bit to the original input as MSb. This new bit is treated as sign bit for new value. For signed
+operation, we do signed extension for this additional bit so the new value is the same as the original value. For unsigned
+operation, this additional bit is 0 so the new value is non-negative and it is the same as the original value. Now the
+new value is treated as signed value and use signed multiplier and signed divider. At the end, we just discard the
+additional bit introduced by adding the "sign" bit.
+
+
+#### Corner case: divide by zero and overflow
+
+RISC-V Spec defines the behavior for divide by zero case and signed division overflow case.
+Signed division overflow occurs only when the most-negative integer is divided by −1.
+
+| Condition              | Dividend         | Divisor | DIVU            | REMU | DIV              | REM |
+| ---------------------- | ---------------- | ------- | --------------- | ---- | ---------------- | --- |
+| Division by zero       | x                | 0       | 2<sup>L</sup>-1 | x    | -1               | x   |
+| Overflow (signed only) | -2<sup>L-1</sup> | -1      | -               | -    | -2<sup>L-1</sup> | 0   |
+
+The div/rem result is calculated first without checking the above condition. Then the conditions are checked generating
+two control signals: `zero` and `overflow`. Finally some MUX logic will select correct value as final div and rem output
+base on the corner case condition.
