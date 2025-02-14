@@ -24,10 +24,6 @@ case class RiscCoreConfig(
     // Other parameter
     separateSram: Boolean = false,      // use two separate SRAM for instruction and data
     axi4LiteConfig: Axi4LiteConfig,     // AXI4 Lite bus configuration
-
-    // test related parameter
-    lsuRreadyDelay: Int = 0,            // Add delay to LSU rready
-    lsuBreadyDelay: Int = 0,            // Add delay to LSU bready
 ) {
     def regidWidth = log2Up(nreg)
     def nbyte = xlen / 8

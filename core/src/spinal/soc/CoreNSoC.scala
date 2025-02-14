@@ -82,7 +82,6 @@ case class CoreNDpi (config: RiscCoreConfig) extends BlackBox {
 
 object CoreNSoCVerilog extends App {
     val axi4LiteConfig = Axi4LiteConfig(addrWidth = 32, dataWidth = 32)
-    val config = RiscCoreConfig(32, 0x80000000L, 32, separateSram=false, axi4LiteConfig=axi4LiteConfig,
-                                lsuBreadyDelay=0, lsuRreadyDelay=0)
+    val config = RiscCoreConfig(32, 0x80000000L, 32, separateSram=false, axi4LiteConfig=axi4LiteConfig)
     Config.spinal.generateVerilog(CoreNSoC(config)).printPruned()
 }
